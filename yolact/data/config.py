@@ -227,8 +227,8 @@ my_dataset = dataset_base.copy({
 santal_dataset = dataset_base.copy({
    'name': 'Santal Dataset',
 
-    'train_images': './data/santal_dataset/train/img',
-    'valid_images': './data/santal_dataset/val/img',
+    'train_images': './data/santal_dataset/train',
+    'valid_images': './data/santal_dataset/val',
    
 
     'train_info': './data/santal_dataset/train.json',
@@ -729,7 +729,6 @@ yolact_base_config = coco_base_config.copy({
     
     # Training params
     'lr_steps': (280000, 600000, 700000, 750000),
-    #'max_iter': 800000,
      'max_iter': 800000,
     
     # Backbone Settings
@@ -850,6 +849,18 @@ my_yolact_ycb_config = yolact_resnet50_config.copy({
     'max_iter': 100000,
 
 })
+n_epochs=40
+santal_config = yolact_darknet53_config.copy({
+    'name': "santal_config",  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'dataset': santal_dataset,
+    'num_classes': len(santal_dataset.class_names) + 1,
+    #iteration per epoch 5230 for a batch size of 8
+    'max_iter': 5230 *  n_epochs,
+
+})
+
 
 # ----------------------- YOLACT++ CONFIGS ----------------------- #
 
@@ -902,8 +913,8 @@ yolact_plus_ycb_config = yolact_plus_resnet50_config.copy({
 
 # Default config
 # cfg = yolact_base_config.copy()
-cfg = my_yolact_ycb_config.copy()
-# cfg = yolact_plus_ycb_config.copy()
+#cfg = my_yolact_ycb_config.copy()
+cfg = santal_config.copy()
 
 def set_cfg(config_name:str):
     """ Sets the active config. Works even if cfg is already imported! """

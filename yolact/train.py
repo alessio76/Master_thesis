@@ -241,10 +241,14 @@ def train():
     iteration = max(args.start_iter, 0)
     last_time = time.time()
 
+    #number of iteration per epoch 
     epoch_size = len(dataset) // args.batch_size
-    print('epoch_size',epoch_size)
+    print(f'iteration_per_epoch = {epoch_size}')
+
+    #number of epochs
     num_epochs = math.ceil(cfg.max_iter / epoch_size)
-    print('num_epoch',epoch_size)
+    print(f'num_epoch = {num_epochs}')
+
     # Which learning rate adjustment step are we on? lr' = lr * gamma ^ step_index
     step_index = 0
 
@@ -259,7 +263,7 @@ def train():
     global loss_types # Forms the print order
     loss_avgs  = { k: MovingAverage(100) for k in loss_types }
     print("lr",args.lr,"momentum",args.momentum,"validation size",args.validation_size,"validation epoch",args.validation_epoch)
-    input('Begin training?')
+    input('Press any key to begin training')
     print('Begin training!')
     # try-except so you can use ctrl+c to save early and stop training
     try:
@@ -305,7 +309,7 @@ def train():
                 optimizer.zero_grad()
 
                 # Forward Pass + Compute loss at the same time (see CustomDataParallel and NetLoss)
-                torch.cuda.empty_cache()
+                #torch.cuda.empty_cache()
                 losses = net(datum)
                 
                 losses = { k: (v).mean() for k,v in losses.items() } # Mean here because Dataparallel
