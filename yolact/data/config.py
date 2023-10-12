@@ -227,8 +227,8 @@ my_dataset = dataset_base.copy({
 santal_dataset = dataset_base.copy({
    'name': 'Santal Dataset',
 
-    'train_images': './data/santal_dataset/train',
-    'valid_images': './data/santal_dataset/val',
+    'train_images': '/media/workstation2/d1382ef8-acda-4cd4-ae67-0a971abc01c81/dope_dataset/santal_juice_dataset/train',
+    'valid_images': '/media/workstation2/d1382ef8-acda-4cd4-ae67-0a971abc01c81/dope_dataset/santal_juice_dataset/val',
    
 
     'train_info': './data/santal_dataset/train.json',
@@ -849,7 +849,7 @@ my_yolact_ycb_config = yolact_resnet50_config.copy({
     'max_iter': 100000,
 
 })
-n_epochs=40
+max_epochs=100
 santal_config = yolact_darknet53_config.copy({
     'name': "santal_config",  # Will default to yolact_resnet50_pascal
 
@@ -857,7 +857,9 @@ santal_config = yolact_darknet53_config.copy({
     'dataset': santal_dataset,
     'num_classes': len(santal_dataset.class_names) + 1,
     #iteration per epoch 5230 for a batch size of 8
-    'max_iter': 5230 *  n_epochs,
+    'max_iter': 5230 *  max_epochs,
+    #'max_iter': 10040,
+    
 
 })
 

@@ -1,4 +1,3 @@
-#start ite=90000
 from data import *
 from utils.augmentations import SSDAugmentation, BaseTransform
 from utils.functions import MovingAverage, SavePath
@@ -18,10 +17,12 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torch.nn.init as init
 import torch.utils.data as data
-import numpy as np
 import argparse
 import datetime
+import matplotlib.pyplot as plt
+import numpy as np
 
+import matplotlib.animation as animation
 # Oof
 import eval as eval_script
 
@@ -63,6 +64,8 @@ parser.add_argument('--validation_size', default=5000, type=int,
                     help='The number of images to use for validation.')
 parser.add_argument('--validation_epoch', default=2, type=int,
                     help='Output validation information every n iterations. If -1, do no validation.')
+parser.add_argument('--max_failure', default=6, type=int,
+                    help='Number of consecutive failure on the validation mAP that stops the training.')
 parser.add_argument('--keep_latest', dest='keep_latest', action='store_true',
                     help='Only keep the latest checkpoint instead of each one.')
 parser.add_argument('--keep_latest_interval', default=100000, type=int,
@@ -118,6 +121,18 @@ if args.batch_size // torch.cuda.device_count() < 6:
         print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
+"""
+#  - B: Box Localization Loss
+        #  - C: Class Confidence Loss
+        #  - M: Mask Loss
+        #  - P: Prototype Loss
+        #  - D: Coefficient Diversity Loss
+        #  - E: Class Existence Loss
+        #  - S: Semantic Segmentation Loss
+
+EXPLAINED IN MultiBox loss in layers.modules
+"""
+
 loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
 
 if torch.cuda.is_available():
@@ -169,6 +184,13 @@ class CustomDataParallel(nn.DataParallel):
             out[k] = torch.stack([output[k].to(output_device) for output in outputs])
         
         return out
+
+
+validation_errors=0
+mAP_old=0
+max_failure=args.max_failure
+best_mAP=mAP_old
+best_model=None
 
 def train():
     if not os.path.exists(args.save_folder):
@@ -262,17 +284,26 @@ def train():
 
     global loss_types # Forms the print order
     loss_avgs  = { k: MovingAverage(100) for k in loss_types }
-    print("lr",args.lr,"momentum",args.momentum,"validation size",args.validation_size,"validation epoch",args.validation_epoch)
-    input('Press any key to begin training')
-    print('Begin training!')
+    print("lr",args.lr,"momentum",args.momentum,"validation_size",args.validation_size,"validation_epoch",args.validation_epoch)
+    """input('Press any key to begin training')
+    print('Begin training!')"""
     # try-except so you can use ctrl+c to save early and stop training
+    validation_check_result=False
+    mAP_now=0
     try:
         for epoch in range(num_epochs):
+            
             # Resume from start_iter
             if (epoch+1)*epoch_size < iteration:
                 continue
+
+            if validation_check_result:
+                print("exited for validation check")
+                yolact_net.state_dict=best_model
+                break
             
             for datum in data_loader:
+              
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch+1)*epoch_size:
                     break
@@ -340,9 +371,10 @@ def train():
                     
                     total = sum([loss_avgs[k].get_avg() for k in losses])
                     loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
-                    
-                    print(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f')
-                            % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed]), flush=True)
+                     
+                    print(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || best_mAP: %f || val_error: %d')
+                            % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed]+ [best_mAP , validation_errors]), flush=True)
+                    #yield iteration,total,mAP_now
 
                 if args.log:
                     precision = 5
@@ -374,8 +406,12 @@ def train():
             # This is done per epoch
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
-                    compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                    validation_check_result,mAP_now = validation_check(epoch, iteration, yolact_net, val_dataset, log)
         
+            
+        print("exited for maximum number of epochs reached")
+            
+
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
     except KeyboardInterrupt:
@@ -390,6 +426,34 @@ def train():
 
     yolact_net.save_weights(save_path(epoch, iteration))
 
+
+
+def validation_check(epoch, iteration, yolact_net, val_dataset, log,mAP_now):
+    global validation_errors, mAP_old, max_failure, best_mAP, best_model
+    #compute current precision mAP
+    mAP_now = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+    
+    #if the old precision is less than the actual one reset the error counter
+    if mAP_old < mAP_now:
+        validation_errors=0
+
+        #if the previous best precision is beaten update it and save the best model
+        if best_mAP<mAP_now:
+            best_mAP=mAP_now
+            best_model=yolact_net.state_dict()
+
+    #if the old precision is greater or equal to the current mark one error
+    else:
+        validation_errors+=1
+
+    #update old precision to the current one
+    mAP_old=mAP_now
+
+    #if the number of consecutive error exceds a treshold stop training
+    if validation_errors>=max_failure:
+        return True
+    else: 
+        return False,mAP_now 
 
 def set_lr(optimizer, new_lr):
     for param_group in optimizer.param_groups:
@@ -498,6 +562,11 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
         print("Computing validation mAP (this may take a while)...", flush=True)
         val_info = eval_script.evaluate(yolact_net, dataset, train_mode=True)
         end = time.time()
+        duration = end-start
+        if (end-start)<60:
+            print(f"validation mAP time {duration}s")
+        else:
+            print(f"validation mAP time {(duration)//60}.{duration%60}m")
 
         if log is not None:
             log.log('val', val_info, elapsed=(end - start), epoch=epoch, iter=iteration)
@@ -507,5 +576,60 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
 def setup_eval():
     eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])
 
+"""
+def run(data):
+    # update the data
+    t, y = data
+    xdata.append(t)
+    ydata.append(y)
+    
+    ax.relim()
+    ax.autoscale_view()
+    line.set_data(xdata, ydata)
+
+    return line,
+"""
+
 if __name__ == '__main__':
+    """fig, ax = plt.subplots()
+    line, = ax.plot([], [], lw=2)
+    ax.grid()
+    xdata, ydata = [], []
+
+    # Only save last 100 frames, but run forever
+    ani = animation.FuncAnimation(fig, run, train)
+    plt.show()"""
     train()
+
+"""
+def run(data):
+    # update the data
+    t, y,mAP = data
+    xdata.append(t)
+    yloss.append(y)
+    ymAP.append(mAP)
+    
+    for line,yk in zip(lines,(yloss,ymAP)):
+       
+        line.set_data(xdata,yk)
+
+    for a in ax:
+        a.relim()
+        a.autoscale_view()
+
+    return lines,
+
+if __name__ == '__main__':
+    fig, ax = plt.subplots(2,1)
+    lines=[]
+    for a in ax:
+        line, = a.plot([], [], lw=2)
+        lines.append(line)
+        a.grid()
+
+    xdata,yloss,ymAP = [],[],[]
+
+    # Only save last 100 frames, but run forever
+    ani = animation.FuncAnimation(fig, run, train)
+    plt.show()
+    #train()"""
