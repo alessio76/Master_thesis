@@ -374,7 +374,7 @@ def train():
                      
                     print(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || best_mAP: %f || val_error: %d')
                             % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed]+ [best_mAP , validation_errors]), flush=True)
-                    #yield iteration,total,mAP_now
+                    yield iteration,total,mAP_now
 
                 if args.log:
                     precision = 5
@@ -425,7 +425,6 @@ def train():
         exit()
 
     yolact_net.save_weights(save_path(epoch, iteration))
-
 
 
 def validation_check(epoch, iteration, yolact_net, val_dataset, log,mAP_now):
@@ -588,20 +587,20 @@ def run(data):
     line.set_data(xdata, ydata)
 
     return line,
-"""
+
 
 if __name__ == '__main__':
-    """fig, ax = plt.subplots()
+    fig, ax = plt.subplots()
     line, = ax.plot([], [], lw=2)
     ax.grid()
     xdata, ydata = [], []
 
     # Only save last 100 frames, but run forever
     ani = animation.FuncAnimation(fig, run, train)
-    plt.show()"""
-    train()
+    plt.show()
+    #train()"""
 
-"""
+
 def run(data):
     # update the data
     t, y,mAP = data
@@ -620,7 +619,7 @@ def run(data):
     return lines,
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(2,1)
+    fig, ax = plt.subplots(1,2)
     lines=[]
     for a in ax:
         line, = a.plot([], [], lw=2)
@@ -628,8 +627,15 @@ if __name__ == '__main__':
         a.grid()
 
     xdata,yloss,ymAP = [],[],[]
+    ax[0].set_title("Loss")
+    ax[0].set_xlabel("iteration")
+    ax[0].set_ylabel("loss")
+
+    ax[1].set_title("mAP")
+    ax[1].set_xlabel("iteration")
+    ax[1].set_ylabel("mAP")
 
     # Only save last 100 frames, but run forever
     ani = animation.FuncAnimation(fig, run, train)
     plt.show()
-    #train()"""
+    #train()
