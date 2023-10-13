@@ -6,6 +6,9 @@
 #include <ATen/cuda/CUDAContext.h>
 #include <ATen/cuda/CUDAEvent.h>
 //#include <ATen/ATen.h>
+//ADDED
+#include <c10/cuda/CUDACachingAllocator.h>
+//END ADDED
 //extern THCState *state;
 #endif
 
