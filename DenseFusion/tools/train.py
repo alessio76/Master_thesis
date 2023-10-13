@@ -22,7 +22,7 @@ import torchvision.utils as vutils
 from torch.autograd import Variable
 from datasets.ycb.dataset import PoseDataset as PoseDataset_ycb
 from datasets.linemod.dataset import PoseDataset as PoseDataset_linemod
-from datasets.my_dataset.dataset import PoseDataset as PoseDataset_my_dataset
+from datasets.santal_dataset.dataset import PoseDataset as PoseDataset_santal_dataset
 from lib.network import PoseNet, PoseRefineNet
 from lib.loss import Loss
 from lib.loss_refiner import Loss_refine
@@ -30,7 +30,7 @@ from lib.utils import setup_logger
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default = 'ycb', help='ycb or linemod')
-parser.add_argument('--dataset_root', type=str, default = '', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''my_dataset'')')
+parser.add_argument('--dataset_root', type=str, default = '', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
 parser.add_argument('--batch_size', type=int, default = 8, help='batch size')
 parser.add_argument('--workers', type=int, default = 1, help='number of data loading workers')
 parser.add_argument('--lr', default=0.0001, help='learning rate')
@@ -46,7 +46,6 @@ parser.add_argument('--resume_posenet', type=str, default = '',  help='resume Po
 parser.add_argument('--resume_refinenet', type=str, default = '',  help='resume PoseRefineNet model')
 parser.add_argument('--start_epoch', type=int, default = 1, help='which epoch to start')
 opt = parser.parse_args()
-
 
 
 def main():
@@ -68,11 +67,11 @@ def main():
         opt.log_dir = 'experiments/logs/linemod'
         opt.repeat_epoch = 20
 
-    elif opt.dataset == 'my_dataset':
-        opt.num_objects = 21 #number of object classes in the dataset
+    elif opt.dataset == 'santal_dataset':
+        opt.num_objects = 1 #number of object classes in the dataset
         opt.num_points = 1000 #number of points on the input pointcloud
-        opt.outf = 'trained_models/my_dataset' #folder to save trained models
-        opt.log_dir = 'experiments/logs/my_dataset' #folder to save logs
+        opt.outf = 'trained_models/santal_dataset' #folder to save trained models
+        opt.log_dir = 'experiments/logs/santal_dataset' #folder to save logs
         opt.repeat_epoch = 1 #number of repeat times for one epoch training
     else:
         print('Unknown dataset')
@@ -103,16 +102,16 @@ def main():
         dataset = PoseDataset_ycb('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
     elif opt.dataset == 'linemod':
         dataset = PoseDataset_linemod('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
-    elif opt.dataset == 'my_dataset':
-        dataset = PoseDataset_my_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
+    elif opt.dataset == 'santal_dataset':
+        dataset = PoseDataset_santal_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=opt.workers)
 
     if opt.dataset == 'ycb':
         test_dataset = PoseDataset_ycb('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
     elif opt.dataset == 'linemod':
         test_dataset = PoseDataset_linemod('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
-    elif opt.dataset == 'my_dataset':
-        test_dataset = PoseDataset_my_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
+    elif opt.dataset == 'santal_dataset':
+        test_dataset = PoseDataset_santal_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
     testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=opt.workers)
     
     opt.sym_list = dataset.get_sym_list()
@@ -237,15 +236,15 @@ def main():
                 dataset = PoseDataset_ycb('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
             elif opt.dataset == 'linemod':
                 dataset = PoseDataset_linemod('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
-            elif opt.dataset == 'my_dataset':
-                dataset = PoseDataset_my_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
+            elif opt.dataset == 'santal_dataset':
+                dataset = PoseDataset_santal_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
             dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=opt.workers)
             if opt.dataset == 'ycb':
                 test_dataset = PoseDataset_ycb('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
             elif opt.dataset == 'linemod':
                 test_dataset = PoseDataset_linemod('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
-            elif opt.dataset == 'my_dataset':
-                dataset = PoseDataset_my_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
+            elif opt.dataset == 'santal_dataset':
+                dataset = PoseDataset_santal_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
             testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=opt.workers)
             
             opt.sym_list = dataset.get_sym_list()
