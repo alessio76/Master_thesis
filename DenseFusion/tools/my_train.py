@@ -29,7 +29,7 @@ from lib.loss_refiner import Loss_refine
 from lib.utils import setup_logger
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default = 'ycb', help='ycb or linemod or santal_dataset')
+parser.add_argument('--dataset', type=str, default = 'santal_dataset', help='ycb or linemod or santal_dataset')
 parser.add_argument('--dataset_root', type=str, default = '', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
 parser.add_argument('--batch_size', type=int, default = 16, help='batch size')
 parser.add_argument('--workers', type=int, default = 2, help='number of data loading workers')
@@ -42,12 +42,8 @@ parser.add_argument('--refine_margin', default=0.013, help='margin to start the 
 parser.add_argument('--noise_trans', default=0.03, help='range of the random noise of translation added to the training data')
 parser.add_argument('--iteration', type=int, default = 2, help='number of refinement iterations')
 parser.add_argument('--nepoch', type=int, default=50, help='max number of epochs to train')
-parser.add_argument('--resume_posenet', type=str, default = 'pose_model_49_0.0192243243732038.pth',  help='resume PoseNet model')
-"""
-pose_model_26_0.012863246640872631.pth
-pose_refine_model_69_0.009449292959118935.pth
-"""
-parser.add_argument('--resume_refinenet', type=str, default = 'pose_refine_model_95_0.016713631652834106.pth',  help='resume PoseRefineNet model')
+parser.add_argument('--resume_posenet', type=str, default = '',  help='resume PoseNet model')
+parser.add_argument('--resume_refinenet', type=str, default = '',  help='resume PoseRefineNet model')
 parser.add_argument('--start_epoch', type=int, default = 1, help='which epoch to start')
 parser.add_argument('--max_iter', type=int, default = 1e9, help='max number of iterations')
 parser.add_argument('--refine_start', type=bool, default = False, help='If True starts the training of the refine model')
@@ -63,7 +59,6 @@ def main():
     opt.manualSeed = random.randint(1, 10000)
     random.seed(opt.manualSeed)
     torch.manual_seed(opt.manualSeed)
-
 
     if opt.dataset == 'ycb':
         opt.num_objects = 21 #number of object classes in the dataset
