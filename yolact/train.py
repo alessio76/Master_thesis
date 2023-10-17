@@ -83,9 +83,14 @@ parser.add_argument('--batch_alloc', default=None, type=str,
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
 
+
 parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
 #torch.set_default_dtype(torch.float16)
+validation_errors=0
+mAP_old=0
+best_mAP=mAP_old
+best_model=None
 if args.config is not None:
     set_cfg(args.config)
 
@@ -185,16 +190,15 @@ class CustomDataParallel(nn.DataParallel):
         
         return out
 
-
-validation_errors=0
-mAP_old=0
-max_failure=args.max_failure
-best_mAP=mAP_old
-best_model=None
-
 def train():
+   
     if not os.path.exists(args.save_folder):
         os.mkdir(args.save_folder)
+    
+    log_file_path = os.path.join(cfg.name,args.log_folder)
+
+    if os.path.exists(log_file_path):
+         os.remove(log_file_path)
 
     dataset = COCODetection(image_path=cfg.dataset.train_images,
                             info_file=cfg.dataset.train_info,
@@ -281,25 +285,26 @@ def train():
     
     save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
     time_avg = MovingAverage()
-
+    validation_check_result=False
+    mAP_now=0
     global loss_types # Forms the print order
     loss_avgs  = { k: MovingAverage(100) for k in loss_types }
     print("lr",args.lr,"momentum",args.momentum,"validation_size",args.validation_size,"validation_epoch",args.validation_epoch)
-    """input('Press any key to begin training')
-    print('Begin training!')"""
+    input('Press any key to begin training')
+    print('Begin training!')
     # try-except so you can use ctrl+c to save early and stop training
-    validation_check_result=False
-    mAP_now=0
+    epoch=0
+
     try:
-        for epoch in range(num_epochs):
+        while epoch<num_epochs:
             
             # Resume from start_iter
             if (epoch+1)*epoch_size < iteration:
                 continue
 
             if validation_check_result:
-                print("exited for validation check")
-                yolact_net.state_dict=best_model
+                if best_model!=None:
+                    yolact_net.load_state_dict(best_model)
                 break
             
             for datum in data_loader:
@@ -371,10 +376,9 @@ def train():
                     
                     total = sum([loss_avgs[k].get_avg() for k in losses])
                     loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
-                     
-                    print(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || best_mAP: %f || val_error: %d')
-                            % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed]+ [best_mAP , validation_errors]), flush=True)
-                    yield iteration,total,mAP_now
+                    string=('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || best_mAP: %f || val_errors: %d') % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed]+ [best_mAP , validation_errors]) 
+                    print(string)
+                    #yield iteration,total,mAP_now
 
                 if args.log:
                     precision = 5
@@ -402,36 +406,45 @@ def train():
                         if args.keep_latest_interval <= 0 or iteration % args.keep_latest_interval != args.save_interval:
                             print('Deleting old save...')
                             os.remove(latest)
-            
+                
             # This is done per epoch
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
                     validation_check_result,mAP_now = validation_check(epoch, iteration, yolact_net, val_dataset, log)
         
-            
-        print("exited for maximum number of epochs reached")
-            
-
+            epoch+=1
+               
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        if validation_check_result:
+            print("exited for validation check")
+        else:
+            print("exited for maximum number of epochs reached")
+        print('Saving network...')
+        
+        
+        if(best_model!=None):
+            yolact_net.save_weights(save_path(epoch, repr(iteration)))
+            exit()
+            """if interactive:
+                plt.savefig("logs/last_result.png")"""
+           
+
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Saving network...')
-            
             # Delete previous copy of the interrupted network so we don't spam the weights folder
             SavePath.remove_interrupt(args.save_folder)
-            
             yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt'))
-        exit()
+            exit()
+            """if interactive:
+                plt.savefig("logs/last_result.png")"""
+           
 
-    yolact_net.save_weights(save_path(epoch, iteration))
-
-
-def validation_check(epoch, iteration, yolact_net, val_dataset, log,mAP_now):
-    global validation_errors, mAP_old, max_failure, best_mAP, best_model
+def validation_check(epoch, iteration, yolact_net, val_dataset, log):
+    global validation_errors, mAP_old,  best_mAP, best_model
     #compute current precision mAP
-    mAP_now = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
-    
+    mAP_now = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)['mask']['all']
     #if the old precision is less than the actual one reset the error counter
     if mAP_old < mAP_now:
         validation_errors=0
@@ -449,8 +462,9 @@ def validation_check(epoch, iteration, yolact_net, val_dataset, log,mAP_now):
     mAP_old=mAP_now
 
     #if the number of consecutive error exceds a treshold stop training
-    if validation_errors>=max_failure:
-        return True
+    
+    if validation_errors>=args.max_failure:
+        return True,mAP_now
     else: 
         return False,mAP_now 
 
@@ -571,6 +585,7 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
             log.log('val', val_info, elapsed=(end - start), epoch=epoch, iter=iteration)
 
         yolact_net.train()
+        return val_info
 
 def setup_eval():
     eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])
@@ -598,10 +613,13 @@ if __name__ == '__main__':
     # Only save last 100 frames, but run forever
     ani = animation.FuncAnimation(fig, run, train)
     plt.show()
-    #train()"""
+    #train()
 
 
+"""
+"""
 def run(data):
+    
     # update the data
     t, y,mAP = data
     xdata.append(t)
@@ -609,23 +627,22 @@ def run(data):
     ymAP.append(mAP)
     
     for line,yk in zip(lines,(yloss,ymAP)):
-       
         line.set_data(xdata,yk)
 
     for a in ax:
         a.relim()
         a.autoscale_view()
 
-    return lines,
+    return lines,"""
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(1,2)
+    """fig, ax = plt.subplots(1,2)
     lines=[]
     for a in ax:
         line, = a.plot([], [], lw=2)
         lines.append(line)
         a.grid()
-
+    
     xdata,yloss,ymAP = [],[],[]
     ax[0].set_title("Loss")
     ax[0].set_xlabel("iteration")
@@ -635,7 +652,11 @@ if __name__ == '__main__':
     ax[1].set_xlabel("iteration")
     ax[1].set_ylabel("mAP")
 
-    # Only save last 100 frames, but run forever
-    ani = animation.FuncAnimation(fig, run, train)
-    plt.show()
-    #train()
+    
+    ani = animation.FuncAnimation(fig, run, fargs=(train,), blit=True)
+    plt.show()"""
+    train()
+    
+
+    
+   

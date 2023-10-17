@@ -977,7 +977,6 @@ def evaluate(net:Yolact, dataset, train_mode=False):
 
 
         if not args.display and not args.benchmark:
-            print()
             if args.output_coco_json:
                 print('Dumping detections...')
                 if args.output_web_json:
@@ -989,7 +988,6 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                     print('Saving data...')
                     with open(args.ap_data_file, 'wb') as f:
                         pickle.dump(ap_data, f)
-
                 return calc_map(ap_data)
         elif args.benchmark:
             print()
