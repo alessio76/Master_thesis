@@ -856,7 +856,7 @@ my_yolact_ycb_config = yolact_resnet50_config.copy({
     'max_iter': 100000,
 
 })
-max_epochs=20
+max_epochs=100
 santal_config = yolact_darknet53_config.copy({
     'name': "santal",  # Will default to yolact_resnet50_pascal
 

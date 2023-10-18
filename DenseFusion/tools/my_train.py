@@ -7,6 +7,7 @@ import datetime
 import _init_paths
 import argparse
 import os
+
 import random
 import time
 import numpy as np
@@ -27,10 +28,11 @@ from lib.network import PoseNet, PoseRefineNet
 from lib.loss import Loss
 from lib.loss_refiner import Loss_refine
 from lib.utils import setup_logger
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default = 'santal_dataset', help='ycb or linemod or santal_dataset')
-parser.add_argument('--dataset_root', type=str, default = '', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
+parser.add_argument('--dataset_root', type=str, default = '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
 parser.add_argument('--batch_size', type=int, default = 16, help='batch size')
 parser.add_argument('--workers', type=int, default = 2, help='number of data loading workers')
 parser.add_argument('--lr', default=0.0001, help='learning rate')
@@ -45,8 +47,9 @@ parser.add_argument('--nepoch', type=int, default=50, help='max number of epochs
 parser.add_argument('--resume_posenet', type=str, default = '',  help='resume PoseNet model')
 parser.add_argument('--resume_refinenet', type=str, default = '',  help='resume PoseRefineNet model')
 parser.add_argument('--start_epoch', type=int, default = 1, help='which epoch to start')
-parser.add_argument('--max_iter', type=int, default = 1e9, help='max number of iterations')
 parser.add_argument('--refine_start', type=bool, default = False, help='If True starts the training of the refine model')
+parser.add_argument('--max_imgs_train', type=int, default=None,help='If not None sets a maximun to the number of images used for training')
+parser.add_argument('--max_imgs_test', type=int, default=None,help='If not None sets a maximun to the number of images used for testing')
 opt = parser.parse_args()
 
 def freeze_layers(model,layers_to_freeze):
@@ -79,6 +82,8 @@ def main():
         opt.num_points = 1000 #number of points on the input pointcloud
         opt.outf = 'trained_models/santal_dataset' #folder to save trained models
         opt.log_dir = 'experiments/logs/santal_dataset' #folder to save logs
+        opt.log_file_train="santal_train.log"
+        opt.log_file_test="santal_test.log"
         opt.repeat_epoch = 1 #number of repeat times for one epoch training
     else:
         print('Unknown dataset')
@@ -124,6 +129,7 @@ def main():
     
     opt.sym_list = dataset.get_sym_list()
     opt.num_points_mesh = dataset.get_num_points_mesh()
+  
 
     print('>>>>>>>>----------Dataset loaded!---------<<<<<<<<\nlength of the training set: {0}\nlength of the testing set: {1}\nnumber of sample points on mesh: {2}\nsymmetry object list: {3}'.format(len(dataset), len(test_dataset), opt.num_points_mesh, opt.sym_list))
     
@@ -134,10 +140,13 @@ def main():
     if opt.start_epoch == 1:
         for log in os.listdir(opt.log_dir):
             os.remove(os.path.join(opt.log_dir, log))
+    
+    if not(os.path.exists(opt.outf)):
+        os.mkdir(opt.outf)
 
     iteration_per_epoch = len(dataset) // opt.batch_size
     extimated_iterations=opt.nepoch*iteration_per_epoch
-    max_iter=opt.max_iter
+
    
     """main_layers_to_freeze=[]
     for i in range(1,2):
@@ -167,19 +176,20 @@ def main():
     
     num_params = sum(p.numel() for p in estimator.parameters() if p.requires_grad)
     num_params += sum(p.numel() for p in refiner.parameters() if p.requires_grad)
-    print(f"Number of trainable parameters: {num_params/1000000}M")
-    print("epoch",opt.nepoch,'learning rate',opt.lr,'batch size',opt.batch_size,'estimated iterations',extimated_iterations)
+    print(f"Number of trainable parameters: {num_params/10e6}M")
+    log_file=open(os.path.join(opt.log_dir,opt.log_file_train),'a')
+  
+    print("epoch",opt.nepoch,'learning rate',opt.lr,'batch size',opt.batch_size,'estimated iterations',extimated_iterations,
+          os.path.join(opt.log_dir,opt.log_file_train),os.path.join(opt.log_dir,opt.log_file_test))
     input("Start training?")
     st_time = time.time()
     train_iteration=0
 
     for epoch in range(opt.start_epoch, opt.nepoch+opt.start_epoch):
-        logger = setup_logger('epoch%d' % epoch, os.path.join(opt.log_dir, 'epoch_%d_log.txt' % epoch))
-        logger.info('Train time {0}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)) + ', ' + 'Training started'))
+        #logger = setup_logger('epoch%d' % epoch, os.path.join(opt.log_dir, 'epoch_%d_log.txt' % epoch))
+        print('Train time {0}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)) + ', ' + 'Training started'))
         #iterations for the current epoch
         train_count = 0
-        #average dis for current batch
-        train_dis_avg = 0.0
 
         #set the refiner network in train mode and the main network in evaluation 
         if opt.refine_start:
@@ -191,18 +201,26 @@ def main():
         optimizer.zero_grad()
         
         batch_time=time.time()
+      
         for i, data in enumerate(dataloader, 0):
+            if i>=opt.max_imgs_train:
+                break
+            #average dis for current batch, resetted every new batch
+            train_dis_avg_per_image = 0.0
+            train_loss_avg_per_image = 0.0 
+
             #get all the data for every objects in the image
             points_list, choose_list, img_list, target_list, model_points_list, idx_list = data
-            n_imgs=len(img_list)
+            n_obj_img=len(img_list)
             #since there is a threshhold on the minimun number of visible pixels some images can be empty 
-            if(n_imgs >0):
+            if(n_obj_img >0):
                 #print(type( points_list), len(choose_list), len(img_list), len(target_list), len(model_points_list), len(idx_list),idx_list[0:])
-                #iterate every all objects in the selected image
-                #we sum the losses on every objects 
+                #iterate on every objects in the selected image
+                #we sum the losses and dist on every objects 
                 dis_per_image=0
-            
-                for h in range(n_imgs):
+                loss_per_image=0
+
+                for h in range(n_obj_img):
                     points, choose, img, target, model_points, idx=points_list[h], choose_list[h], img_list[h], target_list[h], model_points_list[h], idx_list[h]
                     points, choose, img, target, model_points, idx = Variable(points).cuda(), \
                                                                     Variable(choose).cuda(), \
@@ -235,9 +253,16 @@ def main():
                     #sum of all distances of every object from their ground truth point cloud
                     dis_per_image += dis.item()
 
+                    #sum of all losses of every object from their ground truth point cloud
+                    loss_per_image += loss.item()
+
                     
                 #compute the dis on one image as the mean dis on every object in the image, cumulative per batch
-                train_dis_avg += dis_per_image/n_imgs
+                train_dis_avg_per_image += dis_per_image/n_obj_img
+
+                #compute the loss on one image as the mean dis on every object in the image, cumulative per batch
+                train_loss_avg_per_image += loss_per_image/n_obj_img
+
                 #train count is incremented every image but zeroed every epoch 
                 train_count += 1
 
@@ -260,17 +285,26 @@ def main():
                         new_mean=(old_mean*(train_iteration-1)+elapsed)/train_iteration
 
                     eta_str = str(datetime.timedelta(seconds=(extimated_iterations-train_iteration) * new_mean)).split('.')[0]
-
-                    logger.info('Train time {0} Epoch {1} Batch {2} Frame {3} Iteration {4} Avg_dis:{5} ETA:{6} Refine:{7}'.format(time.strftime("%Hh %Mm %Ss", 
+                    print('Train time {0} Epoch {1} Batch {2} Frame {3} Iteration {4} Avg_dis (m):{5} Avg_loss:{6} ETA:{7} Refine:{8}'.format(time.strftime("%Hh %Mm %Ss", 
                                                                                                                                     time.gmtime(time.time() - st_time)), epoch, 
                                                                                                                                     int(train_count / opt.batch_size), 
                                                                                                                                     train_count, 
                                                                                                                                     train_iteration,
-                                                                                                                                    train_dis_avg / opt.batch_size,
+                                                                                                                                    train_dis_avg_per_image / opt.batch_size,
+                                                                                                                                    train_loss_avg_per_image / opt.batch_size,
                                                                                                                                     eta_str,
                                                                                                                                     opt.refine_start))
-                    #reset mean dis for next batch
-                    train_dis_avg = 0
+                    
+                    data_dict = {'Train time':time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)),
+                               'Epoch':epoch, 
+                               'Batch' : int(train_count / opt.batch_size), 
+                               'Frame': train_count,
+                               'Avg_dis': train_dis_avg_per_image / opt.batch_size,
+                               'Refine':opt.refine_start,
+                               'Avg_loss': train_loss_avg_per_image / opt.batch_size
+                               }
+                    
+                    log_file.write(json.dumps(data_dict)+'\n')
 
                 if train_count != 0 and train_count % 1000 == 0:
                     if opt.refine_start:
@@ -278,23 +312,29 @@ def main():
                     else:
                         torch.save(estimator.state_dict(), '{0}/pose_model_current.pth'.format(opt.outf))
 
+
         print('>>>>>>>>----------epoch {0} train finish---------<<<<<<<<'.format(epoch))
 
         points_list, choose_list, img_list, target_list, model_points_list, idx_list=[],[],[],[],[],[]
-        logger = setup_logger('epoch%d_test' % epoch, os.path.join(opt.log_dir, 'epoch_%d_test_log.txt' % epoch))
-        logger.info('Test time {0}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)) + ', ' + 'Testing started'))
-        test_dis = 0.0
+        #logger = setup_logger('epoch%d_test' % epoch, os.path.join(opt.log_dir, 'epoch_%d_test_log.txt' % epoch))
+        print('Test time {0}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)) + ', ' + 'Testing started'))
         test_count = 0
         estimator.eval()
         refiner.eval()
-
+        log_file.close()
+        log_file=open(os.path.join(opt.log_dir,opt.log_file_test),'a')
+        test_dis=0.0
         for j, data in enumerate(testdataloader, 0):
-            points_list, choose_list, img_list, target_list, model_points_list, idx_list = data
-            n_imgs=len(img_list)
-            if n_imgs>0:
-                    dis_per_image=0
+            
+            if j>=opt.max_imgs_test:
+                break
+            test_dis_avg_per_image = 0.0
+            points_list, choose_list, img_list, target_list, model_points_list, idx_list = data[:-1]
+            n_obj_img=len(img_list)
+            if n_obj_img>0:
+                    dis_per_image=0.0
                     
-                    for l in range(n_imgs):
+                    for l in range(n_obj_img):
                         points, choose, img, target, model_points, idx=points_list[l], choose_list[l], img_list[l], target_list[l], model_points_list[l], idx_list[l]
                         points, choose, img, target, model_points, idx = Variable(points).cuda(), \
                                                                         Variable(choose).cuda(), \
@@ -312,19 +352,31 @@ def main():
                                 dis, new_points, new_target = criterion_refine(pred_r, pred_t, new_target, model_points, idx, new_points)
                         dis_per_image += dis.item()
 
-                    test_dis += dis_per_image/n_imgs
-                    logger.info('Test time {0} Test Frame No.{1} dis:{2}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)), test_count, dis))
+                    test_dis_avg_per_image += dis_per_image/n_obj_img
+                    test_dis += test_dis_avg_per_image
+                    print('Test time {0} Test Frame No.{1} dis:{2} test_dist: {3}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)), test_count, test_dis_avg_per_image,test_dis))
+                    
+                    data_dict = {'Test time':time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)),
+                               'test_count':test_count, 
+                               'Avg_dis': test_dis_avg_per_image,
+                               'test iteration': test_count
+                               }
+                    
+                    log_file.write(json.dumps(data_dict)+'\n')
                     test_count += 1
 
-        test_dis = test_dis / test_count
-        logger.info('Test time {0} Epoch {1} TEST FINISH Avg dis: {2}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)), epoch, test_dis))
+        test_dis = test_dis/ test_count
+        
+        print('Test time {0} Epoch {1} TEST FINISH Avg dis: {2}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)), epoch, test_dis))
+        
+        
         if test_dis <= best_test:
             best_test = test_dis
             if opt.refine_start:
                 torch.save(refiner.state_dict(), '{0}/pose_refine_model_{1}_{2}.pth'.format(opt.outf, epoch, test_dis))
             else:
                 torch.save(estimator.state_dict(), '{0}/pose_model_{1}_{2}.pth'.format(opt.outf, epoch, test_dis))
-            print(epoch, '>>>>>>>>----------BEST TEST MODEL SAVED---------<<<<<<<<')
+            print('>>>>>>>>----------BEST TEST MODEL SAVED---------<<<<<<<<')
 
         if best_test < opt.decay_margin and not opt.decay_start:
             opt.decay_start = True
@@ -360,5 +412,8 @@ def main():
             criterion = Loss(opt.num_points_mesh, opt.sym_list)
             criterion_refine = Loss_refine(opt.num_points_mesh, opt.sym_list)
 
+    log_file.close()
+
 if __name__ == '__main__':
     main()
+    
