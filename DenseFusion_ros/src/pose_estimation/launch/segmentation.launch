@@ -3,13 +3,12 @@
 
 <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
 
-
 <!-- parameters to show or not optional things -->
 <arg name="rviz_gui" default="True" />
 <arg name="view_segmentation" default="True" />
 <arg name="set_debug" default="True" />
 <param name="classes" textfile="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/data/santal_dataset/classes.txt" />
-<param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_42_220000.pth" />
+<param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
 
 <!-- topic to publish the images of the camera -->
 <arg name="image_topic" default="/camera/color/image_raw" />
@@ -24,11 +23,22 @@
 <param name="mask_image_topic_name" value="$(arg mask_image_topic)" />
 
   <!-- spawn segmentation node -->
-<node name="seg_node" pkg="pose_estimation" type="yolact_node.py" respawn="true" output="screen"/>
+<node name="seg_node" pkg="pose_estimation" type="yolact_node.py" respawn="true" output="screen">
+
+        <param name="top_k" value="5" />
+        <param name="score_threshold" value="0.9" />
+        <param name="display_masks" value="True" />
+        <param name="display_bboxes" value="True" />
+        <param name="display_text" value="True" />
+        <param name="display_scores" value="True" />
+        <param name="display_crop" value="True" />
+</node>
+
 <node name="mask_node" pkg="pose_estimation" type="mask_to_img.py" respawn="true" if="$(arg set_debug)"/>
 
 <!-- spawn nodes to visualize depth, rgb and optional the segmentation result -->
 <node name="segmentation_viewer" pkg="rqt_image_view" type="rqt_image_view" args="$(arg segmentation_topic)" if="$(arg view_segmentation)"/>
+
 <node name="mask_viewer" pkg="rqt_image_view" type="rqt_image_view" args="$(arg mask_image_topic)" if="$(arg set_debug)"/>
 
 </launch>

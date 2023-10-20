@@ -35,7 +35,7 @@ def prep_display(dets_out, img, h, w, args,undo_transform=True, class_color=Fals
             cfg.rescore_bbox = True
             cfg.mask_proto_debug=args.mask_proto_debug
             t = postprocess(dets_out, w, h, visualize_lincomb = False,
-                                            crop_masks        = True, #args.crop,
+                                            crop_masks        = args.display_crop,
                                             score_threshold   = args.score_threshold)
             cfg.rescore_bbox = save
 
@@ -131,13 +131,14 @@ def prep_display(dets_out, img, h, w, args,undo_transform=True, class_color=Fals
 
 class args:
     def __init__(self):
-        self.top_k=5
-        self.score_threshold=0.9
-        self.display_masks=True
-        self.display_bboxes=True
+        self.top_k=rospy.get_param('~top_k')
+        self.score_threshold=rospy.get_param('~score_threshold')
+        self.display_masks=rospy.get_param('~display_masks')
+        self.display_bboxes=rospy.get_param('~display_bboxes')
         self.mask_proto_debug=False
-        self.display_text=True
-        self.display_scores=True
+        self.display_text=rospy.get_param('~display_text')
+        self.display_scores=rospy.get_param('~display_scores')
+        self.display_crop=rospy.get_param('~display_crop')
        
     
 class ImageProcessor:

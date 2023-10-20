@@ -33,11 +33,10 @@ def str2bool(v):
 
 parser = argparse.ArgumentParser(
     description='Yolact Training Script')
-parser.add_argument('--batch_size', default=8, type=int,
-                    help='Batch size for training')
+parser.add_argument('--batch_size', default=8, type=int,help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"'\
-                         ', the model will resume training from the interrupt file.')
+                        ', the model will resume training from the interrupt file.')
 parser.add_argument('--start_iter', default=-1, type=int,
                     help='Resume training at this iter. If this is -1, the iteration will be'\
                          'determined from the file name.')
@@ -83,7 +82,7 @@ parser.add_argument('--batch_alloc', default=None, type=str,
                     help='If using multiple GPUS, you can set this to be a comma separated list detailing which GPUs should get what local batch size (It should add up to your total batch size).')
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
-
+parser.add_argument('--mAP', default=None, type=float,help='initial mAP to beat')
 
 parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
@@ -138,6 +137,7 @@ EXPLAINED IN MultiBox loss in layers.modules
 """
 
 loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
 
 if torch.cuda.is_available():
     if args.cuda:
@@ -227,23 +227,48 @@ def train():
     elif args.resume == 'latest':
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
+    #number of iteration per epoch 
+    epoch_size = len(dataset) // args.batch_size
+    print(f'iteration_per_epoch = {epoch_size}')
+
+    #number of epochs
+    num_epochs = math.ceil(cfg.max_iter / epoch_size)
+    print(f'num_epoch = {num_epochs}')
+
     if args.resume is not None:
         print('Resuming training, loading {}...'.format(args.resume))
         yolact_net.load_weights(args.resume)
-
-        best_model=yolact_net.state_dict()
-        mAP_old=8.7
-        best_mAP=mAP_old
-        mAP_now=mAP_old
-
+    
         if args.start_iter == -1:
             args.start_iter = SavePath.from_str(args.resume).iteration
+           
     else:
         print('Initializing weights...')
         yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
 
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
-                          weight_decay=args.decay)
+    iteration = max(args.start_iter, 0)
+    epoch=iteration//epoch_size
+
+    if iteration==0:
+        mAP_old=0
+        best_mAP=mAP_old
+        mAP_now=mAP_old
+        best_model=None
+        if os.path.exists(log_file_path):
+            os.remove(log_file_path)
+    else:
+        best_model=yolact_net.state_dict()
+        if args.mAP != None:
+            mAP_old=args.mAP
+        else:
+            mAP_old=compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)['mask']['all']
+        best_mAP=mAP_old
+        mAP_now=mAP_old
+        
+
+    """optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
+                          weight_decay=args.decay)"""
+    optimizer=optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.decay)
     criterion = MultiBoxLoss(num_classes=cfg.num_classes,
                              pos_threshold=cfg.positive_iou_threshold,
                              neg_threshold=cfg.negative_iou_threshold,
@@ -264,27 +289,11 @@ def train():
     yolact_net(torch.zeros(1, 3, cfg.max_size, cfg.max_size).cuda())
     if not cfg.freeze_bn: yolact_net.freeze_bn(True)
 
+    
     # loss counters
     loc_loss = 0
     conf_loss = 0
-    iteration = max(args.start_iter, 0)
     last_time = time.time()
-
-    if iteration==0:
-        mAP_old=0
-        best_mAP=mAP_old
-        mAP_now=mAP_old
-        best_model=None
-        if os.path.exists(log_file_path):
-            os.remove(log_file_path)
-
-    #number of iteration per epoch 
-    epoch_size = len(dataset) // args.batch_size
-    print(f'iteration_per_epoch = {epoch_size}')
-
-    #number of epochs
-    num_epochs = math.ceil(cfg.max_iter / epoch_size)
-    print(f'num_epoch = {num_epochs}')
 
     # Which learning rate adjustment step are we on? lr' = lr * gamma ^ step_index
     step_index = 0
@@ -294,18 +303,17 @@ def train():
                                   shuffle=False, collate_fn=detection_collate,
                                   pin_memory=True,generator=torch.Generator(device='cuda'))
     
-    save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
+    
     time_avg = MovingAverage()
     validation_check_result=False
     global loss_types # Forms the print order
     loss_avgs  = { k: MovingAverage(100) for k in loss_types }
-    epoch=iteration//epoch_size
     
-   
     print("lr",args.lr,"momentum",args.momentum,"validation_size",args.validation_size,"validation_epoch",args.validation_epoch,"iteration",iteration,
           "epoch",epoch,"best_mAP",best_mAP,"mAP_old",mAP_old)
-    input('Press enter to begin training')
+    #input('Press enter to begin training')
     print('Begin training!')
+    
     writer = SummaryWriter('logs/santal_session')
     # try-except so you can use ctrl+c to save early and stop training
     
@@ -316,7 +324,7 @@ def train():
             if (epoch+1)*epoch_size < iteration:
                 continue
 
-            if validation_errors>args.max_failure:
+            if validation_errors>=args.max_failure:
                 if best_model!=None:
                     yolact_net.load_state_dict(best_model)
                 break
@@ -432,14 +440,17 @@ def train():
                 if epoch % args.validation_epoch == 0 and epoch > 0:
                     #compute current precision mAP
                     mAP_now = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)['mask']['all']
-                    validation_errors, best_model, best_mAP = validation_check(yolact_net.state_dict(), mAP_now, validation_errors, mAP_old, best_mAP,best_model)
+                    validation_errors, best_model, best_mAP = validation_check(yolact_net, mAP_now, validation_errors, mAP_old, best_mAP,best_model,
+                                                                               epoch,iteration)
+                    if best_mAP < mAP_now:
+                        yolact_net.save_weights(save_path(epoch, iteration))
                     mAP_old=mAP_now
 
             epoch+=1
                
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
-        if validation_check_result:
+        if validation_errors > args.max_failure:
             print("exited for validation check")
         else:
             print("exited for maximum number of epochs reached")
@@ -464,21 +475,21 @@ def train():
                 plt.savefig("logs/last_result.png")"""
            
 
-def validation_check(current_model, mAP_now, validation_errors, mAP_old, best_mAP, best_model):
+def validation_check(net, precision_now, validation_errors, old_precision, best_precision, best_model):
     
     #if the old precision is less than the actual one reset the error counter
-    if mAP_old < mAP_now:
+    if old_precision < precision_now:
         validation_errors=0
 
         #if the previous best precision is beaten update it and save the best model
-        if best_mAP<mAP_now:
-            best_mAP=mAP_now
-            best_model= current_model
+        if best_precision<precision_now:
+            best_precision=precision_now
+            best_model= net.state_dict()
     #if the old precision is greater or equal to the current mark one error
     else:
         validation_errors+=1
 
-    return validation_errors, best_model, best_mAP
+    return validation_errors, best_model, best_precision
 
 def set_lr(optimizer, new_lr):
     for param_group in optimizer.param_groups:
@@ -602,33 +613,7 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
 def setup_eval():
     eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])
 
-"""
-def run(data):
-    # update the data
-    t, y = data
-    xdata.append(t)
-    ydata.append(y)
-    
-    ax.relim()
-    ax.autoscale_view()
-    line.set_data(xdata, ydata)
 
-    return line,
-
-
-if __name__ == '__main__':
-    fig, ax = plt.subplots()
-    line, = ax.plot([], [], lw=2)
-    ax.grid()
-    xdata, ydata = [], []
-
-    # Only save last 100 frames, but run forever
-    ani = animation.FuncAnimation(fig, run, train)
-    plt.show()
-    #train()
-
-
-"""
 """
 def run(data):
     
