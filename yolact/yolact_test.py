@@ -39,6 +39,8 @@ def prep_display(dets_out, img, h, w, args,undo_transform=True, class_color=Fals
     else:
         img_gpu = img / 255.0
         h, w, _ = img.shape
+
+    cfg.mask_proto_debug=args.mask_proto_debug
     
     with timer.env('Postprocess'):
         save = cfg.rescore_bbox
@@ -47,6 +49,7 @@ def prep_display(dets_out, img, h, w, args,undo_transform=True, class_color=Fals
                                         crop_masks        = args.crop,
                                         score_threshold   = args.score_threshold)
         cfg.rescore_bbox = save
+        
 
     with timer.env('Copy'):
         idx = t[1].argsort(0, descending=True)[:args.top_k]
@@ -220,12 +223,8 @@ if __name__ == '__main__':
                 [255, 0, 255], [0, 255, 255], [128, 0, 0], [0, 128, 0], [0, 0, 128],
                 [251, 194, 44], [240, 20, 134], [160, 103, 173], [70, 163, 210], [140, 227, 61],
                 [128, 128, 0], [128, 0, 128], [0, 128, 128], [64, 0, 0], [0, 64, 0], [0, 0, 64]]
-    # for index, item in enumerate(color):
-    #     for i, t in enumerate(color[index]):
-    #         color[index][i] = float(t) / 255.0
-    class_name = ['master_chef_can', 'cracker_box', 'sugar_box', 'tomato_soup_can', 'mustard_bottle', 'tuna_fish_can', 'pudding_box', 'gelatin_box',
-                'potted_meat_can', 'banana', 'pitcher_base', 'bleach_cleanser', 'bowl', 'mug', 'power_drill', 'wood_block', 'scissors', 'large_marker',
-                'large_clamp', 'extra_large_clamp', 'foam_brick']
+   
+    class_name = ['santal']
     torch.set_default_tensor_type('torch.cuda.FloatTensor')         
     yolact = Yolact()
     yolact.load_weights(opt.trained_model)
@@ -260,23 +259,9 @@ if __name__ == '__main__':
             batch = FastBaseTransform()(frame.unsqueeze(0))
             preds = yolact(batch)
             img_numpy=prep_display(preds, frame, None, None, undo_transform=False,args=opt)
-            print(img_numpy.shape,"test")
             cv2.imshow("out imag",img_numpy)
             cv2.waitKey()
-            """classes, scores, boxes, masks = postprocess(preds , img.shape[1], img.shape[0], score_threshold=0.15)
-            fig,ax=plt.subplots(nrows=len(boxes), ncols=2,figsize=(15, 15))
-            
-            for i,box, in enumerate(boxes.cpu().numpy().astype(int)):
-                temp=img.copy()
-                x1, y1, x2, y2 = box
-                cv2.rectangle(temp, (x1, y1), (x2, y2), (0,255,0), 1)
-                ax[i][0].imshow(temp)
-                for j in range(3):
-                    temp=img[:,:,j]*masks.cpu().numpy()[i,:,:]
-            
-                ax[i][1].imshow(temp)
-            
-            plt.show()"""
+           
             
 
                 

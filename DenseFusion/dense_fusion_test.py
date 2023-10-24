@@ -1,4 +1,6 @@
 import argparse
+import sys
+sys.path.append('/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact')
 import copy
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D 
@@ -6,6 +8,7 @@ import numpy.ma as ma
 import torch
 import torch.nn as nn
 import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -47,10 +50,12 @@ def prep_display(dets_out, img, h, w, args,undo_transform=True, class_color=Fals
     with timer.env('Postprocess'):
         save = cfg.rescore_bbox
         cfg.rescore_bbox = True
+        cfg.mask_proto_debug = False
         t = postprocess(dets_out, w, h, visualize_lincomb = False,
                                         crop_masks        = args.crop,
                                         score_threshold   = args.score_threshold)
-        cfg.rescore_bbox = save
+     
+        
 
     with timer.env('Copy'):
         idx = t[1].argsort(0, descending=True)[:args.top_k]
@@ -169,40 +174,6 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-        
-"""def get_bbox(rmin, rmax, cmin, cmax):
-    r_b = rmax - rmin
-    for tt in range(len(border_list)):
-        if r_b > border_list[tt] and r_b < border_list[tt + 1]:
-            r_b = border_list[tt + 1]
-            break
-    c_b = cmax - cmin
-    for tt in range(len(border_list)):
-        if c_b > border_list[tt] and c_b < border_list[tt + 1]:
-            c_b = border_list[tt + 1]
-            break
-    center = [int((rmin + rmax) / 2), int((cmin + cmax) / 2)]
-    rmin = center[0] - int(r_b / 2)
-    rmax = center[0] + int(r_b / 2)
-    cmin = center[1] - int(c_b / 2)
-    cmax = center[1] + int(c_b / 2)
-    if rmin < 0:
-        delt = -rmin
-        rmin = 0
-        rmax += delt
-    if cmin < 0:
-        delt = -cmin
-        cmin = 0
-        cmax += delt
-    if rmax > img_width:
-        delt = rmax - img_width
-        rmax = img_width
-        rmin -= delt
-    if cmax > img_length:
-        delt = cmax - img_length
-        cmax = img_length
-        cmin -= delt
-    return rmin, rmax, cmin, cmax"""
 def get_bbox(label):
     rows = np.any(label, axis=1)
     cols = np.any(label, axis=0)
@@ -246,7 +217,7 @@ def get_bbox(label):
 def create_annotations_path(path,png_replacement):
     #basically substitute png with whatever desidered value
     #json,depth.exr,seg.exr and img with annotations in the path 
-    sub_dict={'img':'annotations','png':str(png_replacement)}
+    sub_dict={'png':str(png_replacement)}
     temp=path
 
     for old,new in sub_dict.items():
@@ -280,45 +251,14 @@ def depth_image_from_distance_image(distance, fx,fy,cx,cy):
   z = distance / np.sqrt(1. + x_over_z**2 + y_over_z**2)
   return z
 
-def draw_3d_bbox(pred_box_pixel,img):
-    cv2.line(img, (pred_box_pixel[0, 0], pred_box_pixel[1, 0]),
-            (pred_box_pixel[0, 1], pred_box_pixel[1, 1]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 1], pred_box_pixel[1, 1]),
-            (pred_box_pixel[0, 2], pred_box_pixel[1, 2]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 2], pred_box_pixel[1, 2]),
-            (pred_box_pixel[0, 3], pred_box_pixel[1, 3]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 3], pred_box_pixel[1, 3]),
-            (pred_box_pixel[0, 0], pred_box_pixel[1, 0]), (0,0,255), 2, lineType=cv2.LINE_AA)
-
-    cv2.line(img, (pred_box_pixel[0, 4], pred_box_pixel[1, 4]),
-            (pred_box_pixel[0, 5], pred_box_pixel[1, 5]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 5], pred_box_pixel[1, 5]),
-            (pred_box_pixel[0, 6], pred_box_pixel[1, 6]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 6], pred_box_pixel[1, 6]),
-            (pred_box_pixel[0, 7], pred_box_pixel[1, 7]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 7], pred_box_pixel[1, 7]),
-            (pred_box_pixel[0, 4], pred_box_pixel[1, 4]), (0,0,255), 2, lineType=cv2.LINE_AA)
-
-    cv2.line(img, (pred_box_pixel[0, 0], pred_box_pixel[1, 0]),
-            (pred_box_pixel[0, 4], pred_box_pixel[1, 4]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 1], pred_box_pixel[1, 1]),
-            (pred_box_pixel[0, 5], pred_box_pixel[1, 5]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 2], pred_box_pixel[1, 2]),
-            (pred_box_pixel[0, 6], pred_box_pixel[1, 6]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    cv2.line(img, (pred_box_pixel[0, 3], pred_box_pixel[1, 3]),
-            (pred_box_pixel[0, 7], pred_box_pixel[1, 7]), (0,0,255), 2, lineType=cv2.LINE_AA)
-    
-    return img
-    
-    
     
 #dense fusion args
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default = 'trained_models/my_dataset/pose_model_49_0.0192243243732038.pth',  help='resume PoseNet model')
-parser.add_argument('--refine_model', type=str, default = 'trained_models/my_dataset/pose_refine_model_116_0.01558202758204158.pth',  help='resume PoseRefineNet model')
+parser.add_argument('--model', type=str, default = 'trained_models/santal_dataset/pose_model_7_0.05715361642802047.pth',  help='resume PoseNet model')
+parser.add_argument('--refine_model', type=str, default = '',  help='resume PoseRefineNet model')
 
 # yolact args
-parser.add_argument('--trained_model',default='/home/alessio/progetto_robotica/src/yolact_net/weights/yolact_resnet50_399_400000.pth', type=str,
+parser.add_argument('--trained_model',default='/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_55_290000_mAP_8_89.pth', type=str,
                     help='Trained state_dict file path to open. If "interrupt", this will open the interrupt file.')
 parser.add_argument('--top_k', default=5, type=int,
                         help='Further restrict the number of predictions to parse')
@@ -358,6 +298,8 @@ parser.add_argument('--score_threshold', default=0.7, type=float,
                     help='Detections with a score under this threshold will not be considered. This currently only works in display mode.')
 parser.add_argument('--display_fps', default=False, dest='display_fps', action='store_true',
                     help='When displaying / saving video, draw the FPS on the frame')
+parser.add_argument('--mask_proto_debug', default=False, dest='mask_proto_debug', action='store_true',
+                        help='Outputs stuff for scripts/compute_mask.py.')
 
 parser.set_defaults(no_bar=False, display=False, resume=False, output_coco_json=False, output_web_json=False,
                     shuffle=False,
@@ -373,10 +315,10 @@ norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225
 border_list = [-1, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640, 680]
 xmap = np.array([[j for i in range(640)] for j in range(480)])
 ymap = np.array([[i for i in range(640)] for j in range(480)])
-cam_cx = 320.0
-cam_cy = 240.0
-cam_fx = 579.411376953125
-cam_fy = 579.411376953125
+cam_cx = 317.7075500488281
+cam_cy = 238.1421356201172
+cam_fx = 610.59326171875
+cam_fy = 610.605712890625
 
 
 
@@ -391,14 +333,9 @@ img_width = 480
 img_length = 640
 num_points = 1000
 num_points_mesh = 500
-iteration = 4
-corners={}
+iteration = 0
 bs = 1
-dataset_config_dir = 'datasets/my_dataset/dataset_config'
-ycb_toolbox_dir = 'YCB_Video_toolbox'
-result_wo_refine_dir = 'experiments/eval_result/ycb/Densefusion_wo_refine_result'
-result_refine_dir = 'experiments/eval_result/ycb/Densefusion_iterative_result'
-result_image = 'experiments/eval_result/ycb/image'
+dataset_config_dir = 'datasets/santal_dataset/dataset_config'
 
 color = [[255, 255, 255], [0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0],
               [255, 0, 255], [0, 255, 255], [128, 0, 0], [0, 128, 0], [0, 0, 128],
@@ -410,51 +347,30 @@ color = [[255, 255, 255], [0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0],
               'large_clamp', 'extra_large_clamp', 'foam_brick']"""
 
 #since we use the same ycb classes use the same .txt file
-class_file = open('datasets/my_dataset/dataset_config/classes.txt')
+class_file = open('datasets/santal_dataset/dataset_config/classes.txt')
 class_id = 1
 cld = {}
 class_dict = {}
 while 1:
     class_input = class_file.readline().replace('\n',"")
+    #add the read classes in the vector of the classes of interest
     if not class_input:
         break
     #complete point cloud of each object
-    #input_file = open('{0}/YCB_Video_Models/models/{1}/points.xyz'.format(self.root, class_input))
-    input_file=open(os.path.join('datasets/my_dataset',"YCB_Video_Models","models",class_input,"points.xyz"))
+    #input_file = open('{0}/YCB_Video_Models/models/{1}/points.xyz'.format(root, class_input))
+    input_file=open(os.path.join("/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset",f"{class_input}",f"{class_input}.xyz"))
     class_dict[class_input]=class_id
     cld[class_id] = []
-    x = []
-    y = []
-    z = []
     #store point cloud in order
     while 1:
         input_line = input_file.readline()
         if not input_line:
             break
         input_line = input_line[:-1].split(' ')
-        x.append(float(input_line[0]))
-        y.append(float(input_line[1]))
-        z.append(float(input_line[2]))
-        cld[class_id].append([float(input_line[0]), float(input_line[1]), float(input_line[2])])
+        temp=np.array([float(input_line[0]), float(input_line[1]), float(input_line[2])])/1000
+        cld[class_id].append(list(temp))
     cld[class_id] = np.array(cld[class_id])
     input_file.close()
-
-    x_max = np.max(x)
-    x_min = np.min(x)
-    y_max = np.max(y)
-    y_min = np.min(y)
-    z_max = np.max(z)
-    z_min = np.min(z)
-
-    corners[class_id] = np.array([[x_min, y_min, z_min],
-                                [x_max, y_min, z_min],
-                                [x_max, y_max, z_min],
-                                [x_min, y_max, z_min],
-
-                                [x_min, y_min, z_max],
-                                [x_max, y_min, z_max],
-                                [x_max, y_max, z_max],
-                                [x_min, y_max, z_max]])
     
     class_id += 1
 
@@ -468,16 +384,17 @@ ax1.set_ylabel('Y')
 ax1.set_zlabel('Z')
 
 plt.show()"""
-num_obj = 21
+num_obj = 1
 estimator = PoseNet(num_points = num_points, num_obj = num_obj)
 estimator.cuda()
 estimator.load_state_dict(torch.load(opt.model))
 estimator.eval()
 
-refiner = PoseRefineNet(num_points = num_points, num_obj = num_obj)
-refiner.cuda()
-refiner.load_state_dict(torch.load(opt.refine_model))
-refiner.eval()
+if opt.refine_model != '':
+    refiner = PoseRefineNet(num_points = num_points, num_obj = num_obj)
+    refiner.cuda()
+    refiner.load_state_dict(torch.load(opt.refine_model))
+    refiner.eval()
 
 yolact = Yolact()
 yolact.load_weights(opt.trained_model)
@@ -526,20 +443,12 @@ with torch.no_grad():
     cv2.waitKey(0)
     my_result_wo_refine = []
     my_result = []
-
-    #classes=[1]
-    K = np.array([[cam_fx , 0 , cam_cx],
-        [0, cam_fy, cam_cy],
-        [0, 0, 1]])
-    
  
     #since classes as one element for each object this means for each object 
     #in the scene
     for index in range(len(classes)):
         #cuboid=np.array(pose_annotations['objects'][index]['projected_cuboid']).astype(int)[0:-1,:].T
         target_t = np.array(pose_annotations['objects'][index]['location'])
-        center= (K @ np.array(target_t))
-        center=center/center[2]
         target_r = np.array(pose_annotations['objects'][index]['quaternion_xyzw'])
         target_r= Rotation.from_quat(target_r)
         itemid = classes[index] + 1
@@ -584,7 +493,7 @@ with torch.no_grad():
         pt1 = (xmap_masked - cam_cy) * pt2 / cam_fy
         cloud_numpy = np.concatenate((pt0, pt1, pt2), axis=1)
         cloud=cloud_numpy
-    
+        """
         fig= plt.figure()
         ax = fig.add_subplot(projection='3d')
         img_plt = ax.scatter(cloud[:,0], cloud[:,1], cloud[:,2])
@@ -594,7 +503,7 @@ with torch.no_grad():
         ax.set_zlabel('Z')
 
         plt.show()
-        
+        """
         cloud = torch.from_numpy(cloud.astype(np.float32))
         choose = torch.LongTensor(choose.astype(np.int32))
         img_masked = norm(torch.from_numpy(img_masked.astype(np.float32)))
@@ -665,8 +574,6 @@ with torch.no_grad():
         model_points =cld[itemid]
 
         pred = np.dot(model_points,target_r.as_matrix().T) + target_t
-        image_points, _ = cv2.projectPoints(pred, target_r.as_matrix(), target_t, K, None)
-        image_points = np.round(image_points.squeeze()).astype(int)
 
         fig1= plt.figure()
         ax1 = fig1.add_subplot(projection='3d')
@@ -688,50 +595,6 @@ with torch.no_grad():
         ax1.legend()
         plt.show()
 
-        for pointt in image_points:
-            cv2.circle(img, tuple(pointt), 2, (0, 255, 0), -1)
-        #proj_pred=pred @ K.T
-        """for i in range(proj_pred.shape[0]):
-            proj_pred[i,:]=proj_pred[i,:]/proj_pred[i,2]
-            px,py=proj_pred[i,:2].astype(int)
-            if py>=640:
-                py=639
-            if px>=480:
-                px=479
-            img[px,py,:]=(255,255,255)"""
-        cv2.imshow("est",img)
-        cv2.waitKey(0)
-        #proj_pts, _ = cv2.projectPoints(cld[class_dict['002_master_chef_can']], camera_to_world_matrix[0:3,0:3], camera_to_world_matrix[3,0:3], K, None)
-        pred_box = np.dot(corners[class_dict['002_master_chef_can']], my_r.T) + my_t
-        transposed_pred_box = pred_box.T
-        pred_box = transposed_pred_box/transposed_pred_box[2,:]
-        pred_box_pixel = K @ pred_box
-        pred_box_pixel = pred_box_pixel.astype(np.int64)
-
-        # Draw the projected points onto the image for i in range(proj_pts.shape[0]):
-            
-        img=draw_3d_bbox(pred_box_pixel,img)
-        """transposed_pred = pred.T
-        pred = transposed_pred/transposed_pred[2,:]
-        pred_pixel = K @ pred
-        pred_pixel = pred_pixel.astype(np.int64)
-
-        _, cols = pred_pixel.shape
-        del_list = []
-        for i in range(cols):
-            if pred_pixel[0,i] >= img_length or pred_pixel[1,i] >= img_width :
-                del_list.append(i)
-        pred_pixel = np.delete(pred_pixel, del_list, axis=1)
-
-        img[pred_pixel[1,:], pred_pixel[0,:]] = color[int(itemid-1)]
-        img[pred_pixel[1,:], pred_pixel[0,:], 0] = color[itemid-1][0]
-        img[pred_pixel[1,:], pred_pixel[0,:], 1] = color[itemid-1][1]
-        img[pred_pixel[1,:], pred_pixel[0,:], 2] = color[itemid-1][2]
-
-        print("* " + '002_master_chef_can' + " *")
-        print("[pred box pixel]")
-        print(pred_box_pixel)
-        cv2.imshow("Predicted img ", img)
-        cv2.waitKey(0)"""
+       
 
        

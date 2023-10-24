@@ -1,0 +1,6 @@
+santal_49_260000 mAP_8_77
+santal_51_270000 mAP_8.99
+santal_53_280000 mAP_8_86
+santal_55_290000 mAP_8_89
+santal_57_300000 mAP_8_83
+santal_59_310000 mAP_8_82

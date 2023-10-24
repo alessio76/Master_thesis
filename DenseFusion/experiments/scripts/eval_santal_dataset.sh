@@ -8,7 +8,7 @@ export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=0
 
 python3 -W ignore ./tools/eval_santal_dataset.py --dataset_root /mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset\
-  --model trained_models/santal_dataset/pose_model_1_0.06977209592285376.pth\
+  --model trained_models/santal_dataset/pose_model_current.pth\
   --iteration 0\
   --AUC 
   #--dis_target 0.02\

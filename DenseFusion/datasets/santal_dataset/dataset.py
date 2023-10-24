@@ -86,7 +86,6 @@ class PoseDataset(data.Dataset):
         #contains the base path for configuration inside DenseFusion 
         configuration_base_path="datasets/santal_dataset/dataset_config"
       
-        
         #since we use the same ycb classes use the same .txt file
         class_file = open(os.path.join(configuration_base_path,'classes.txt'))
         class_id = 1
@@ -109,7 +108,7 @@ class PoseDataset(data.Dataset):
                 if not input_line:
                     break
                 input_line = input_line[:-1].split(' ')
-                temp=np.array([float(input_line[0]), float(input_line[1]), float(input_line[2])])/1000
+                temp=np.array([float(input_line[0]), float(input_line[1]), float(input_line[2])])
                 self.cld[class_id].append(list(temp))
             self.cld[class_id] = np.array(self.cld[class_id])
             input_file.close()
@@ -146,7 +145,7 @@ class PoseDataset(data.Dataset):
         self.trancolor = transforms.ColorJitter(0.2, 0.2, 0.2, 0.05)
         self.noise_img_loc = 0.0
         self.noise_img_scale = 7.0
-        self.minimum_num_pt = 500
+        self.minimum_num_pt = 200
         self.norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.symmetry_obj_idx = []
         self.num_pt_mesh_small = 500
@@ -245,22 +244,35 @@ class PoseDataset(data.Dataset):
 
                     ax1.set_xlabel('X')
                     ax1.set_ylabel('Y')
-                    ax1.set_zlabel('Z')
-
-                    plt.show()"""
+                    ax1.set_zlabel('Z')"""
 
                     if self.add_noise:
                         cloud = np.add(cloud, add_t)
 
-                    dellist = [k for k in range(0, len(self.cld[cld_id]))]
-                    dellist = random.sample(dellist, len(self.cld[cld_id]) - self.num_pt_mesh_small)
-                    model_points = np.delete(self.cld[cld_id], dellist, axis=0)
+                    #divide by 1000 to account for the fact that the input mesh (and so the point cloud) is in mm
+                    model_points=self.cld[cld_id]/1000
+                    dellist = [k for k in range(0, len(model_points))]
+                    dellist = random.sample(dellist, len(model_points) - self.num_pt_mesh_small)
+                    model_points = np.delete(model_points, dellist, axis=0)
                     
                     target = np.dot(model_points, target_r.T)
+                 
                     if self.add_noise:
                         target = np.add(target, target_t + add_t)
                     else:
                         target = np.add(target, target_t)
+                    """
+                    fig2= plt.figure()
+                    ax1 = fig2.add_subplot(projection='3d')
+                    img_plt = ax1.scatter(target[:,1], 
+                                          target[:,0], 
+                                          target[:,2])
+
+                    ax1.set_xlabel('X')
+                    ax1.set_ylabel('Y')
+                    ax1.set_zlabel('Z')
+
+                    plt.show()"""
             
                     cloud_list.append(torch.from_numpy(cloud.astype(np.float32)))
                     choose_list.append(torch.LongTensor(choose.astype(np.int32)))
@@ -270,11 +282,15 @@ class PoseDataset(data.Dataset):
                     class_id_list.append(torch.LongTensor([int(cld_id)-1]))  
                             #seg_ids.append(object['segmentation_id'])
                             #indices.append(i)
+                """else: 
+                    print(f"Not enough points!! {len(mask.nonzero()[0])}")
+                    cv2.imshow("test",mask.astype(np.uint8)*255)
+                    cv2.waitKey(0)"""
 
         if self.mode=='train':
-            return cloud_list,choose_list,img_list,target_list,model_points_list,class_id_list
+            return cloud_list, choose_list, img_list, target_list, model_points_list, class_id_list
         else:      
-            return cloud_list,choose_list,img_list,target_list,model_points_list,class_id_list,self.image_list[index]
+            return cloud_list, choose_list, img_list, target_list, model_points_list, class_id_list , self.image_list[index]
      #the index representing the classes
     
          

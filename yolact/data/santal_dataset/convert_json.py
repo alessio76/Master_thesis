@@ -12,25 +12,25 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     '--train-ann-directory',
-    default="data/santal_dataset/train_test",
+    default="data/santal_dataset/train",
     help = 'train annotations directory path'
 )
 
 parser.add_argument(
     '--val-ann-directory',
-    default="data/santal_dataset/val_test",
+    default="data/santal_dataset/val",
     help = 'val annotations directory path'
 )
 
 parser.add_argument(
     '--out-train-file',
-    default='data/santal_dataset/train_test.json',
+    default='data/santal_dataset/train.json',
     help = 'output coco annotations for train set'
 )
 
 parser.add_argument(
     '--out-val-file',
-    default='data/santal_dataset/val_test.json',
+    default='data/santal_dataset/val.json',
     help = 'output coco annotations for validation set'
 )
 

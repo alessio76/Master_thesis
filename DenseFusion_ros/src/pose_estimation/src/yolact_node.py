@@ -152,8 +152,8 @@ class ImageProcessor:
         self.mask_pub = rospy.Publisher(self.mask_topic, mask)
         self.args=args()
         self.yolact=yolact
-        self.height=480
-        self.width=640
+        self.height=rospy.get_param('height')
+        self.width=rospy.get_param('width')
         self.masks_msg=self.create_mask_msg(self.height,self.width)
         self.default_mask_msg=self.create_mask_msg(self.height,self.width)
 
@@ -239,7 +239,7 @@ class ImageProcessor:
 if __name__ == '__main__':
     rospy.init_node('segmentation_node')
     torch.set_default_tensor_type('torch.cuda.FloatTensor')     
-    weight_path=rospy.get_param('yolact_model')
+    weight_path=rospy.get_param('~yolact_model')
     yolact = Yolact()
     yolact.load_weights(weight_path)
     yolact.eval()
