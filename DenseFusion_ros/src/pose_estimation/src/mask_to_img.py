@@ -39,6 +39,7 @@ class Mask_to_image:
 		ros_image = self.bridge.cv2_to_imgmsg(cv_image, encoding="mono8")
 		ros_image.header.stamp=data.header.stamp
 		ros_image.header.seq=data.header.seq
+		ros_image.header.frame_id="camera_color_optical_frame"
 		
 		# Publish the ROS image message
 		self.image_pub.publish(ros_image)

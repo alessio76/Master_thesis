@@ -4,7 +4,7 @@
 
 
 <!-- Show segmentation masks on the image 
-<include file="$(find realsense2_camera)/launch/rs_camera.launch"/>-->
+<include file="$(find realsense2_camera)/launch/rs_camera.launch"/> -->
 <arg name="view_segmentation" default="True" />
 
 <!-- Show binary masks -->

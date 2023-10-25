@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 sys.path.append('/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion')
+sys.path.append('/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact')
 from pose_estimation.msg import mask
 import random
 import copy
@@ -13,6 +14,7 @@ import tf2_ros
 from geometry_msgs.msg import TransformStamped
 import message_filters
 import warnings
+from yolact_node import prep_display,args
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import torch
@@ -85,21 +87,25 @@ class ImageProcessor:
         self.pose_model=pose_model
         self.pose_refinement_model=pose_refinement_model
         self.minimum_num_pt=min_pixel
-        rospy.loginfo(f'{class_id_dict}, {type(class_id_dict)}')
-        self.class_id_dict=class_id_dict
         mask_sub=message_filters.Subscriber(self.mask_topic, mask)
         image_sub=message_filters.Subscriber(self.image_topic, Image)
         depth_sub=message_filters.Subscriber(self.depth_topic, Image)
-
-        self.ts = message_filters.ApproximateTimeSynchronizer([image_sub, mask_sub, depth_sub], 10,0.01)
-       
+        
+        depth_sub=rospy.Subscriber(self.depth_topic, Image,self.depth_callback)
+        image_sub=rospy.Subscriber(self.image_topic, Image,self.img_callback)
+        mask_sub=rospy.Subscriber(self.mask_topic, mask,self.mask_to_numpy)
+        #depth_sub=rospy.Subscriber(self.depth_topic, Image,self.depth_callback)
+        self.ts = message_filters.ApproximateTimeSynchronizer([image_sub, mask_sub,depth_sub], 10, 0.1, allow_headerless=True)
+        #self.ts = message_filters.TimeSynchronizer([image_sub, depth_sub], 10)
+        #self.pose_pub = rospy.Publisher(self.pose_, mask)
         self.height= rospy.get_param('height')
         self.width= rospy.get_param('width')
         self.camera_frame=rospy.get_param('~tf_camera_frame')
-        self.depth_img=np.zeros((self.height,self.width))
-      
         self.ts.registerCallback(self.callback)
- 
+
+        self.depth_img=np.zeros((self.height,self.width))
+        self.class_id_dict=class_id_dict
+
     def create_tf_message(self,pred_t, pred_r,i,camera_frame):
         transform_msg = TransformStamped()
         transform_msg.header.stamp = rospy.Time.now()  # Set the timestamp of the transform
@@ -117,6 +123,7 @@ class ImageProcessor:
 
 
     def callback(self,image_msg,mask_msg,depth_msg):
+        rospy.loginfo("oooooooo")
         if mask_msg.classes[0] != -10:
             mask_numpy=self.mask_to_numpy(mask_msg)
             depth_numpy=self.depth_callback(depth_msg)
@@ -125,7 +132,6 @@ class ImageProcessor:
 
             img_numpy = np.array(img_numpy)[:, :, :3]
             img_numpy.astype(np.float32)
-            #+1 because range starts from 0
             seg_ids = [i for i in range(1,mask_numpy.shape[0]+1)]
           
             classes = list(np.array(mask_msg.classes)+1)
@@ -135,6 +141,7 @@ class ImageProcessor:
             #for all objects in the scene
             for i in range(len(seg_ids)):
                 #if the detected objects belong to the classes of interest perform pose estimation
+                
                 selected_obj_class = self.class_id_dict[classes[i]]
                 seg_id=seg_ids[i]
                 mask_label = mask_numpy[i,:,:]
@@ -222,7 +229,7 @@ class ImageProcessor:
                                 my_t = my_t_final
 
                     rospy.loginfo(f'pred={my_t},{my_r}')
-                    tf_message=self.create_tf_message(my_t,my_r,i,self.camera_frame)
+                    tf_message=self.create_tf_message(my_t,my_r,i.self.camera_frame)
                     self.tf_broadcaster.sendTransform(tf_message)
                             
                
@@ -232,19 +239,25 @@ class ImageProcessor:
             
 
     def img_callback(self,img_msg):
+        """rospy.loginfo("RGB")
+        rospy.loginfo(img_msg.header)"""
         img_numpy=  self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
         return img_numpy
 
     def mask_to_numpy(self,objects_mask):
+        """rospy.loginfo("MASK")
+        rospy.loginfo(objects_mask.header)"""
         # Reshape the received data into a 2D numpy array
         mask_data = np.array(objects_mask.mask.data, dtype=np.uint8)
-        mask_data = mask_data.reshape((objects_mask.mask.layout.dim[2].size,
+        """mask_data = mask_data.reshape((objects_mask.mask.layout.dim[2].size,
                                        objects_mask.mask.layout.dim[0].size, 
-                                       objects_mask.mask.layout.dim[1].size))
+                                       objects_mask.mask.layout.dim[1].size))"""
 
         return mask_data
      
     def depth_callback(self, depth_img):
+        """rospy.loginfo("DEPTH")
+        rospy.loginfo(depth_img.header)"""
         depth_data=  self.bridge.imgmsg_to_cv2(depth_img, desired_encoding="passthrough")
         depth_test=depth_data
         nan_mask = np.isnan(depth_data)
@@ -320,7 +333,7 @@ if __name__ == '__main__':
     image_topic=rospy.get_param("image_topic_name")
     depth_topic=rospy.get_param("depth_topic_name")
     mask_topic=rospy.get_param("mask_topic_name")
-    image_processor = ImageProcessor(image_topic,depth_topic,mask_topic,pose_model,class_id_dict,num_points,min_pixel,cam_scale,pose_refinement_model)
+    image_processor = ImageProcessor(image_topic,depth_topic,mask_topic,pose_model,pose_refinement_model,class_id_dict,num_points,min_pixel,cam_scale)
     rospy.spin()
           
           

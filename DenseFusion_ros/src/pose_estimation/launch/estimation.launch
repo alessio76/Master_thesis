@@ -22,7 +22,7 @@
     
     <!-- weigth of DenseFusion model-->
     <param name="refine" value="$(arg refine)" />
-    <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_9_0.028050023602697424.pth" />
+    <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_19_0.025406306836892375.pth" />
     <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_116_0.01558202758204158.pth" />
 
     <!-- Camera parameters -->
@@ -30,7 +30,7 @@
     <param name="cy" value="238.1421356201172" />
     <param name="fx" value="610.59326171875" />
     <param name="fy" value="610.605712890625" />
-    <param name="cam_scale" value="0.001" />
+    <param name="cam_scale" value="1000" />
     <param name="min_pixel" value="$(arg min_pixel)" />    
     <param name="refine_iteration" value="2" />
     <param name="objects_of_interest" value="santal_ace" />

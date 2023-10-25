@@ -228,7 +228,7 @@ class ImageProcessor:
             self.result_pub.publish(result_img)
             out_mask_msg.header.stamp=img.header.stamp
             out_mask_msg.header.seq=img.header.seq
-            
+            out_mask_msg.header.frame_id="camera_color_optical_frame"
             self.mask_pub.publish(out_mask_msg)
             
         except CvBridgeError as e:
