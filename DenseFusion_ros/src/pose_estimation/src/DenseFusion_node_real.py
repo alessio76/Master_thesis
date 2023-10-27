@@ -2,6 +2,22 @@
 import sys
 sys.path.append('/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion')
 sys.path.append('/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact')
+from yolact import Yolact
+from data import COLORS
+from utils.augmentations import FastBaseTransform
+from utils import timer
+from layers.output_utils import postprocess, undo_image_transformation
+from data import cfg
+import rospy
+import warnings
+from pose_estimation.msg import mask
+from std_msgs.msg import MultiArrayLayout, MultiArrayDimension
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
+import cv2
+import torch
+from collections import defaultdict
 from pose_estimation.msg import mask
 import random
 import copy
@@ -76,7 +92,8 @@ def get_bbox(label):
     return rmin, rmax, cmin, cmax
 
 class ImageProcessor:
-    def __init__(self,image_topic,depth_topic,mask_topic,pose_model,class_id_dict,num_points,min_pixel,cam_scale=1,pose_refinement_model=None):
+    def __init__(self,image_topic,depth_topic,mask_topic,pose_model,class_id_dict,num_points,min_pixel,yolact,segmentation_topic,
+                 cam_scale=1,pose_refinement_model=None):
         self.bridge = CvBridge()
         self.depth_topic=depth_topic
         self.cam_scale=cam_scale
@@ -87,24 +104,61 @@ class ImageProcessor:
         self.pose_model=pose_model
         self.pose_refinement_model=pose_refinement_model
         self.minimum_num_pt=min_pixel
-        mask_sub=message_filters.Subscriber(self.mask_topic, mask)
+        self.height=rospy.get_param('height')
+        self.width=rospy.get_param('width')
         image_sub=message_filters.Subscriber(self.image_topic, Image)
         depth_sub=message_filters.Subscriber(self.depth_topic, Image)
-        
-        depth_sub=rospy.Subscriber(self.depth_topic, Image,self.depth_callback)
-        image_sub=rospy.Subscriber(self.image_topic, Image,self.img_callback)
-        mask_sub=rospy.Subscriber(self.mask_topic, mask,self.mask_to_numpy)
-        #depth_sub=rospy.Subscriber(self.depth_topic, Image,self.depth_callback)
-        self.ts = message_filters.ApproximateTimeSynchronizer([image_sub, mask_sub,depth_sub], 10, 0.1, allow_headerless=True)
+        self.ts = message_filters.ApproximateTimeSynchronizer([image_sub, depth_sub], 10,0.01)
         #self.ts = message_filters.TimeSynchronizer([image_sub, depth_sub], 10)
         #self.pose_pub = rospy.Publisher(self.pose_, mask)
-        self.height= rospy.get_param('height')
-        self.width= rospy.get_param('width')
         self.camera_frame=rospy.get_param('~tf_camera_frame')
         self.ts.registerCallback(self.callback)
-
         self.depth_img=np.zeros((self.height,self.width))
         self.class_id_dict=class_id_dict
+
+        self.segmentation_topic=segmentation_topic
+        self.result_pub = rospy.Publisher(self.segmentation_topic, Image)
+        self.mask_pub = rospy.Publisher(self.mask_topic, mask)
+        self.args=args()
+        self.yolact=yolact
+        self.masks_msg=self.create_mask_msg(self.height,self.width)
+        self.default_mask_msg=self.create_mask_msg(self.height,self.width)
+
+        self.color=[[255, 255, 255], [0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0],
+                [255, 0, 255], [0, 255, 255], [128, 0, 0], [0, 128, 0], [0, 0, 128],
+                [251, 194, 44], [240, 20, 134], [160, 103, 173], [70, 163, 210], [140, 227, 61],
+                [128, 128, 0], [128, 0, 128], [0, 128, 128], [64, 0, 0], [0, 64, 0], [0, 0, 64]]
+        
+    def create_mask_msg(self,height_value,width_value):
+        msg=mask()
+        msg.mask.layout = MultiArrayLayout()
+        height=MultiArrayDimension()
+        width=MultiArrayDimension()
+        object=MultiArrayDimension()
+        height.label  = "height"
+        height.size   = height_value
+        width.label  = "width"
+        width.size   = width_value
+        #width.stride =  width.size 
+        #height.stride = width.size * height.size
+        object.label="object"
+        #object.stride=1
+        #object.size=1
+        msg.mask.layout.dim=[height, width, object]
+        msg.mask.data=np.zeros((1,height_value,width_value)).astype(np.int8).flatten()
+
+        return msg
+    
+    def set_mask_data(self,msg,data,n_obj=1):
+        #object
+        msg.mask.layout.dim[2].size= n_obj
+        msg.mask.layout.dim[2].stride= n_obj
+        #height
+        msg.mask.layout.dim[0].stride *= n_obj
+        #width
+        msg.mask.layout.dim[1].stride *= n_obj
+        #data
+        msg.mask.data = data.astype(np.int8).flatten()
 
     def create_tf_message(self,pred_t, pred_r,i,camera_frame):
         transform_msg = TransformStamped()
@@ -121,143 +175,153 @@ class ImageProcessor:
 
         return transform_msg
 
-
-    def callback(self,image_msg,mask_msg,depth_msg):
-        rospy.loginfo("oooooooo")
-        if mask_msg.classes[0] != -10:
-            mask_numpy=self.mask_to_numpy(mask_msg)
-            depth_numpy=self.depth_callback(depth_msg)
-            img_numpy=self.img_callback(image_msg)
-            mask_depth = (depth_numpy != 0)
-
-            img_numpy = np.array(img_numpy)[:, :, :3]
-            img_numpy.astype(np.float32)
-            seg_ids = [i for i in range(1,mask_numpy.shape[0]+1)]
-          
-            classes = list(np.array(mask_msg.classes)+1)
+    def callback(self,image_msg,depth_msg):
+        global total_t
+        global iteration_t
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+        except CvBridgeError as e:
+            print(e)
         
-            img = cv2.cvtColor(img_numpy, cv2.COLOR_BGR2RGB)
+        with torch.no_grad():
+            frame = torch.from_numpy(cv_image).cuda().float()
+            batch = FastBaseTransform()(frame.unsqueeze(0))
+            preds = self.yolact(batch)
+            processed_image,masks,classes=prep_display(preds, frame, None, None, self.args,undo_transform=False)
+           
+        # Convert the processed image back to a ROS Image message
+        try:
+            if processed_image is not None:
+                result_img = self.bridge.cv2_to_imgmsg(processed_image,'bgr8')
+                n_obj=masks.shape[0]
+                self.set_mask_data(self.masks_msg,masks.astype(np.int8).flatten(),n_obj)
+                out_mask_msg=self.masks_msg
+                out_mask_msg.classes=classes
+                depth_numpy=self.depth_callback(depth_msg)
+                mask_depth = (depth_numpy != 0)
+                cv_image = np.array(cv_image)[:, :, :3]
+                cv_image.astype(np.float32)
+                seg_ids = [i for i in range(1,masks.shape[0]+1)]
             
-            #for all objects in the scene
-            for i in range(len(seg_ids)):
-                #if the detected objects belong to the classes of interest perform pose estimation
-                
-                selected_obj_class = self.class_id_dict[classes[i]]
-                seg_id=seg_ids[i]
-                mask_label = mask_numpy[i,:,:]
+                classes = list(np.array(classes)+1)
             
-                mask_label=mask_label.reshape(mask_label.shape[0],mask_label.shape[1])
-                final_mask = mask_label * mask_depth
-               
-                if len(final_mask.nonzero()[0]) > self.minimum_num_pt:
-                    cld_id=classes[i]
-                    index=cld_id
-                    rmin, rmax, cmin, cmax=get_bbox(mask_label)
-                    img_masked = np.transpose(np.array(img)[:, :, :3], (2, 0, 1))[:, rmin:rmax, cmin:cmax]     
+                img = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
                 
-                    choose = final_mask[rmin:rmax, cmin:cmax].flatten().nonzero()[0]
-                    if len(choose) > self.num_points:
-                        c_mask = np.zeros(len(choose), dtype=int)
-                        c_mask[:self.num_points] = 1
-                        np.random.shuffle(c_mask)
-                        choose = choose[c_mask.nonzero()]
-                    else:
-                        choose = np.pad(choose, (0, self.num_points - len(choose)), 'wrap')
-
-                    depth_masked = depth_numpy[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
-                    xmap_masked = xmap[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
-                    ymap_masked = ymap[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
+                #for all objects in the scene
+                for i in range(len(seg_ids)):
+                    #if the detected objects belong to the classes of interest perform pose estimation
                     
-                    choose = np.array([choose])
-                    pt2 = depth_masked / self.cam_scale
-                    pt0 = (ymap_masked - cam_cx) * pt2 / cam_fx
-                    pt1 = (xmap_masked - cam_cy) * pt2 / cam_fy
-                    cloud = np.concatenate((pt0, pt1, pt2), axis=1)
+                    selected_obj_class = self.class_id_dict[classes[i]]
+                    seg_id=seg_ids[i]
+                    mask_label = masks[i,:,:]
+                
+                    mask_label=mask_label.reshape(mask_label.shape[0],mask_label.shape[1])
+                    final_mask = mask_label * mask_depth
+                
+                    if len(final_mask.nonzero()[0]) > self.minimum_num_pt:
+                        cld_id=classes[i]
+                        index=cld_id
+                        rmin, rmax, cmin, cmax=get_bbox(mask_label)
+                        img_masked = np.transpose(np.array(img)[:, :, :3], (2, 0, 1))[:, rmin:rmax, cmin:cmax]     
+                    
+                        choose = final_mask[rmin:rmax, cmin:cmax].flatten().nonzero()[0]
+                        if len(choose) > self.num_points:
+                            c_mask = np.zeros(len(choose), dtype=int)
+                            c_mask[:self.num_points] = 1
+                            np.random.shuffle(c_mask)
+                            choose = choose[c_mask.nonzero()]
+                        else:
+                            choose = np.pad(choose, (0, self.num_points - len(choose)), 'wrap')
 
-                    obj_cloud=cld[cld_id]
-                    dellist = [k for k in range(0, len(obj_cloud))]
-                    dellist = random.sample(dellist, len(obj_cloud) - num_points_mesh)
-                    model_points = np.delete(obj_cloud, dellist, axis=0)
-
-                    with torch.no_grad():
-                        model_points=torch.from_numpy(model_points.astype(np.float32))
-                        cloud = torch.from_numpy(cloud.astype(np.float32))
-                        choose = torch.LongTensor(choose.astype(np.int32))
-                        img_masked = norm(torch.from_numpy(img_masked.astype(np.float32)))
-                        index = torch.LongTensor([int(cld_id) - 1])
-
-                        cloud = cloud.view(1, num_points, 3)
-                        choose = choose.view(1, 1, num_points)
-                        model_points=model_points.view(1,num_points_mesh,3)
-                        img_masked = img_masked.view(1, 3, img_masked.size()[1], img_masked.size()[2])
-                        cloud = Variable(cloud).cuda()
-                        choose = Variable(choose).cuda()
-                        img_masked = Variable(img_masked).cuda()
-                        index = Variable(index).cuda()
+                        depth_masked = depth_numpy[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
+                        xmap_masked = xmap[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
+                        ymap_masked = ymap[rmin:rmax, cmin:cmax].flatten()[choose][:, np.newaxis].astype(np.float32)
                         
-                        pred_r, pred_t, pred_c, emb = self.pose_model(img_masked, cloud, choose, index)
-                        pred_r = pred_r / torch.norm(pred_r, dim=2).view(1, num_points, 1)
-                        pred_c = pred_c.view(bs, num_points)
-                        pred_t = pred_t.view(bs * num_points, 1,3)
-                        how_max, which_max = torch.max(pred_c, 1)
-                        points = cloud.view(bs * num_points, 1, 3)
-                        my_r = pred_r[0][which_max[0]].view(-1).cpu().data.numpy()
-                        my_t = (points + pred_t)[which_max[0]].view(-1).cpu().data.numpy()
+                        choose = np.array([choose])
+                        pt2 = depth_masked / self.cam_scale
+                        pt0 = (ymap_masked - cam_cx) * pt2 / cam_fx
+                        pt1 = (xmap_masked - cam_cy) * pt2 / cam_fy
+                        cloud = np.concatenate((pt0, pt1, pt2), axis=1)
 
-                        if self.pose_refinement_model!=None:
-                            for ite in range(0, iteration):
-                                T = Variable(torch.from_numpy(my_t.astype(np.float32))).cuda().view(1, 3).repeat(num_points, 1).contiguous().view(1, num_points, 3)
-                                my_mat = quaternion_matrix(my_r)
-                                R = Variable(torch.from_numpy(my_mat[:3, :3].astype(np.float32))).cuda().view(1, 3, 3)
-                                my_mat[0:3, 3] = my_t
-                                
-                                new_cloud = torch.bmm((cloud - T), R).contiguous()
-                                pred_r, pred_t = self.pose_refinement_model(new_cloud, emb, index)
-                                pred_r = pred_r.view(1, 1, -1)
-                                pred_r = pred_r / (torch.norm(pred_r, dim=2).view(1, 1, 1))
-                                my_r_2 = pred_r.view(-1).cpu().data.numpy()
-                                my_t_2 = pred_t.view(-1).cpu().data.numpy()
-                                my_mat_2 = quaternion_matrix(my_r_2)
-                                my_mat_2[0:3, 3] = my_t_2
+                        obj_cloud=cld[cld_id]
+                        dellist = [k for k in range(0, len(obj_cloud))]
+                        dellist = random.sample(dellist, len(obj_cloud) - num_points_mesh)
+                        model_points = np.delete(obj_cloud, dellist, axis=0)
 
-                                my_mat_final = np.dot(my_mat, my_mat_2)
-                                my_r_final = copy.deepcopy(my_mat_final)
-                                my_r_final[0:3, 3] = 0
-                                my_r_final = quaternion_from_matrix(my_r_final, True)
-                                my_t_final = np.array([my_mat_final[0][3], my_mat_final[1][3], my_mat_final[2][3]])
-                                my_r = my_r_final
-                                my_t = my_t_final
+                        with torch.no_grad():
+                            model_points=torch.from_numpy(model_points.astype(np.float32))
+                            cloud = torch.from_numpy(cloud.astype(np.float32))
+                            choose = torch.LongTensor(choose.astype(np.int32))
+                            img_masked = norm(torch.from_numpy(img_masked.astype(np.float32)))
+                            index = torch.LongTensor([int(cld_id) - 1])
 
-                    rospy.loginfo(f'pred={my_t},{my_r}')
-                    tf_message=self.create_tf_message(my_t,my_r,i.self.camera_frame)
-                    self.tf_broadcaster.sendTransform(tf_message)
+                            cloud = cloud.view(1, num_points, 3)
+                            choose = choose.view(1, 1, num_points)
+                            model_points=model_points.view(1,num_points_mesh,3)
+                            img_masked = img_masked.view(1, 3, img_masked.size()[1], img_masked.size()[2])
+                            cloud = Variable(cloud).cuda()
+                            choose = Variable(choose).cuda()
+                            img_masked = Variable(img_masked).cuda()
+                            index = Variable(index).cuda()
                             
+                            pred_r, pred_t, pred_c, emb = self.pose_model(img_masked, cloud, choose, index)
+                            pred_r = pred_r / torch.norm(pred_r, dim=2).view(1, num_points, 1)
+                            pred_c = pred_c.view(bs, num_points)
+                            pred_t = pred_t.view(bs * num_points, 1,3)
+                            how_max, which_max = torch.max(pred_c, 1)
+                            points = cloud.view(bs * num_points, 1, 3)
+                            my_r = pred_r[0][which_max[0]].view(-1).cpu().data.numpy()
+                            my_t = (points + pred_t)[which_max[0]].view(-1).cpu().data.numpy()
+                            
+                            if self.pose_refinement_model!=None:
+                                for ite in range(0, iteration):
+                                    T = Variable(torch.from_numpy(my_t.astype(np.float32))).cuda().view(1, 3).repeat(num_points, 1).contiguous().view(1, num_points, 3)
+                                    my_mat = quaternion_matrix(my_r)
+                                    R = Variable(torch.from_numpy(my_mat[:3, :3].astype(np.float32))).cuda().view(1, 3, 3)
+                                    my_mat[0:3, 3] = my_t
+                                    
+                                    new_cloud = torch.bmm((cloud - T), R).contiguous()
+                                    pred_r, pred_t = self.pose_refinement_model(new_cloud, emb, index)
+                                    pred_r = pred_r.view(1, 1, -1)
+                                    pred_r = pred_r / (torch.norm(pred_r, dim=2).view(1, 1, 1))
+                                    my_r_2 = pred_r.view(-1).cpu().data.numpy()
+                                    my_t_2 = pred_t.view(-1).cpu().data.numpy()
+                                    my_mat_2 = quaternion_matrix(my_r_2)
+                                    my_mat_2[0:3, 3] = my_t_2
+
+                                    my_mat_final = np.dot(my_mat, my_mat_2)
+                                    my_r_final = copy.deepcopy(my_mat_final)
+                                    my_r_final[0:3, 3] = 0
+                                    my_r_final = quaternion_from_matrix(my_r_final, True)
+                                    my_t_final = np.array([my_mat_final[0][3], my_mat_final[1][3], my_mat_final[2][3]])
+                                    my_r = my_r_final
+                                    my_t = my_t_final
+                        
+                        
+                        rospy.loginfo(f'my_t={my_t},my_r={my_r}')
+                        tf_message=self.create_tf_message(my_t,my_r,i,self.camera_frame)
+                        self.tf_broadcaster.sendTransform(tf_message)
                
-        else:
-            rospy.loginfo("No object detected!")
-        
+            else:
+                rospy.loginfo("no detection!")
+                out_mask_msg=self.default_mask_msg
+                out_mask_msg.classes=[-10]
+                result_img = self.bridge.cv2_to_imgmsg(cv_image,'bgr8')
+          
+            # Publish the result
+            result_img.header.frame_id="camera_color_optical_frame"
+            self.result_pub.publish(result_img)
+            out_mask_msg.header.stamp=image_msg.header.stamp
+            out_mask_msg.header.seq=image_msg.header.seq
+            out_mask_msg.header.frame_id="camera_color_optical_frame"
+            self.mask_pub.publish(out_mask_msg)
             
-
-    def img_callback(self,img_msg):
-        """rospy.loginfo("RGB")
-        rospy.loginfo(img_msg.header)"""
-        img_numpy=  self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-        return img_numpy
-
-    def mask_to_numpy(self,objects_mask):
-        """rospy.loginfo("MASK")
-        rospy.loginfo(objects_mask.header)"""
-        # Reshape the received data into a 2D numpy array
-        mask_data = np.array(objects_mask.mask.data, dtype=np.uint8)
-        """mask_data = mask_data.reshape((objects_mask.mask.layout.dim[2].size,
-                                       objects_mask.mask.layout.dim[0].size, 
-                                       objects_mask.mask.layout.dim[1].size))"""
-
-        return mask_data
-     
+        except CvBridgeError as e:
+            print(e)
+  
+    
     def depth_callback(self, depth_img):
-        """rospy.loginfo("DEPTH")
-        rospy.loginfo(depth_img.header)"""
+       
         depth_data=  self.bridge.imgmsg_to_cv2(depth_img, desired_encoding="passthrough")
         depth_test=depth_data
         nan_mask = np.isnan(depth_data)
@@ -332,8 +396,18 @@ if __name__ == '__main__':
     
     image_topic=rospy.get_param("image_topic_name")
     depth_topic=rospy.get_param("depth_topic_name")
-    mask_topic=rospy.get_param("mask_topic_name")
-    image_processor = ImageProcessor(image_topic,depth_topic,mask_topic,pose_model,pose_refinement_model,class_id_dict,num_points,min_pixel,cam_scale)
+    mask_topic=rospy.get_param("mask_topic_name")  
+    weight_path=rospy.get_param('~yolact_model')
+    yolact = Yolact()
+    yolact.load_weights(weight_path)
+    yolact.eval()
+    yolact.detect.use_fast_nms = True
+    yolact.detect.use_cross_class_nms = True
+    yolact.cuda()
+    segmentation_topic=rospy.get_param('segmentation_topic_name')
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')  
+    image_processor = ImageProcessor(image_topic,depth_topic,mask_topic,pose_model,class_id_dict,num_points,min_pixel,yolact,segmentation_topic,cam_scale,pose_refinement_model)
+    
     rospy.spin()
           
           

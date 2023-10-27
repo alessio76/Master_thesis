@@ -1,0 +1,72 @@
+
+<launch>
+
+    <arg name="view_segmentation" default="False" />
+    
+    <!-- Show binary masks -->
+    <arg name="view_mask" default="False" />
+
+    <!-- Visualize binary mask  -->
+    <arg name="set_debug" default="True" />
+
+    <!-- topic to publish the images of the camera -->
+    <arg name="image_topic" default="/camera/color/image_raw" />
+    <arg name="segmentation_topic" default="/camera/color/segmentation_result" />
+    <arg name="mask_topic" default="/camera/mask_result" />
+    <arg name="mask_image_topic" default="/camera/mask_image" />
+    <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" />
+
+    <!-- parameters to commond use -->
+    <param name="image_topic_name" value="$(arg image_topic)" />
+    <param name="segmentation_topic_name" value="$(arg segmentation_topic)" />
+    <param name="mask_topic_name" value="$(arg mask_topic)" />
+    <param name="mask_image_topic_name" value="$(arg mask_image_topic)" />
+    <param name="height" value="480" />
+    <param name="width" value="640" />
+    <param name="mask_image_topic_name" value="$(arg mask_image_topic)" />
+
+    <arg name="rviz_gui" default="True" />
+    <arg name="refine" default="False" />
+
+    <!-- Visualize the binary mask -->
+    <arg name="min_pixel" default="200" /> 
+    <param name="classes" textfile="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/data/santal_dataset/classes.txt" />
+
+
+    <!-- spawn segmentation node -->
+    <node name="estimation_node" pkg="pose_estimation" type="DenseFusion_node_real.py" respawn="true" output="screen">
+        <param name="top_k" value="5" />
+        <param name="score_threshold" value="0.9" />
+        <param name="display_masks" value="True" />
+        <param name="display_bboxes" value="True" />
+        <param name="display_text" value="True" />
+        <param name="display_scores" value="True" />
+        <param name="display_crop" value="True" />
+        <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
+        
+        <param name="refine" value="$(arg refine)" />
+        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_19_0.025406306836892375.pth" />
+        <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_116_0.01558202758204158.pth" />
+        <!-- Camera parameters -->
+        <param name="cx" value="317.7075500488281" />
+        <param name="cy" value="238.1421356201172" />
+        <param name="fx" value="610.59326171875" />
+        <param name="fy" value="610.605712890625" />
+        <param name="cam_scale" value="1000" />
+        <param name="min_pixel" value="$(arg min_pixel)" />    
+        <param name="refine_iteration" value="2" />
+        <param name="objects_of_interest" value="santal_ace" />
+        <param name="cloud_base_path" value="/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_ace" />
+        <param name="view_segmentation" value="$(arg view_segmentation)" />
+        <param name="tf_camera_frame" value="camera_color_optical_frame" />
+    </node>
+
+    <!-- spawn node to visualize the binary masks -->
+    <node name="mask_node" pkg="pose_estimation" type="mask_to_img.py" respawn="true" if="$(arg set_debug)"/>
+    <node name="mask_viewer" pkg="rqt_image_view" type="rqt_image_view" args="$(arg mask_image_topic)" if="$(arg view_mask)"/>
+
+    <!-- spawn node to visualize the segmentation result -->
+    <node name="segmentation_viewer" pkg="rqt_image_view" type="rqt_image_view" args="$(arg segmentation_topic)" if="$(arg view_segmentation)"/>
+
+    
+</launch>

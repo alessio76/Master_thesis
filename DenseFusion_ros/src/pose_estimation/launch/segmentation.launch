@@ -1,10 +1,7 @@
 <launch>
 
-
-
-
-<!-- Show segmentation masks on the image 
-<include file="$(find realsense2_camera)/launch/rs_camera.launch"/> -->
+<!-- Show segmentation masks on the image -->
+<include file="$(find realsense2_camera)/launch/rs_camera.launch"/> 
 <arg name="view_segmentation" default="True" />
 
 <!-- Show binary masks -->
@@ -31,14 +28,14 @@
 
   <!-- spawn segmentation node -->
 <node name="seg_node" pkg="pose_estimation" type="yolact_node.py" respawn="true">
-        <param name="top_k" value="5" />
-        <param name="score_threshold" value="0.9" />
-        <param name="display_masks" value="True" />
-        <param name="display_bboxes" value="True" />
-        <param name="display_text" value="True" />
-        <param name="display_scores" value="True" />
-        <param name="display_crop" value="True" />
-        <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
+    <param name="top_k" value="5" />
+    <param name="score_threshold" value="0.9" />
+    <param name="display_masks" value="True" />
+    <param name="display_bboxes" value="True" />
+    <param name="display_text" value="True" />
+    <param name="display_scores" value="True" />
+    <param name="display_crop" value="True" />
+    <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
 </node>
 
 
