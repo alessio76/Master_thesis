@@ -1,0 +1,15 @@
+{
+    "exported_object_classes": [
+        "santal_ace"
+    ],
+    "exported_objects": [
+        {
+            "class": "santal_ace",
+            "cuboid_dimensions": [
+                83.97270202636719,
+                66.73796081542969,
+                42.35523986816406
+            ]
+        }
+    ]
+}
