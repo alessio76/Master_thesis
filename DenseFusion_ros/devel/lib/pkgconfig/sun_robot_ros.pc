@@ -1,8 +1,0 @@
-prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel
-
-Name: sun_robot_ros
-Description: Description of sun_robot_ros
-Version: 0.0.0
-Cflags: -I/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/src/sun_robot_ros/sun_robot_ros/include
-Libs: -L${prefix}/lib -lsun_robot_ros -lcartesian_traj_nodelet -ljoint_traj_nodelet
-Requires: roscpp sun_robot_lib sun_ros_msgs sun_robot_msgs actionlib

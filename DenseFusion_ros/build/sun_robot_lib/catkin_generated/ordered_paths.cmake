@@ -1,1 +1,0 @@
-set(ORDERED_PATHS "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include;/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/src/sun_math_toolbox/include")

@@ -1,8 +1,0 @@
-prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
-
-Name: motoman_driver
-Description: Description of motoman_driver
-Version: 0.3.3
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: std_msgs roscpp actionlib trajectory_msgs actionlib_msgs control_msgs sensor_msgs simple_message urdf industrial_msgs industrial_robot_client

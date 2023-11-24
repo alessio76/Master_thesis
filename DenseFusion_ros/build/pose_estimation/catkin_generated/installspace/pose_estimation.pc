@@ -1,8 +1,0 @@
-prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
-
-Name: pose_estimation
-Description: Description of pose_estimation
-Version: 0.0.0
-Cflags: -I${prefix}/include -I/usr/include/eigen3
-Libs: -L${prefix}/lib 
-Requires: rospy message_runtime moveit_core moveit_visual_tools moveit_ros_planning_interface interactive_markers tf2_geometry_msgs actionlib_msgs roscpp

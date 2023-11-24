@@ -1,8 +1,0 @@
-prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
-
-Name: yaskawa_moveit_config
-Description: Description of yaskawa_moveit_config
-Version: 0.3.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

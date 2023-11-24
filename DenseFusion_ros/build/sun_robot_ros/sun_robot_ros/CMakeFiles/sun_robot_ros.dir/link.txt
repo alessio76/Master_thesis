@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC   -shared -Wl,-soname,libsun_robot_ros.so -o /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/lib/libsun_robot_ros.so CMakeFiles/sun_robot_ros.dir/src/sun_robot_ros/ClikNode.cpp.o CMakeFiles/sun_robot_ros.dir/src/sun_robot_ros/ClikClient.cpp.o CMakeFiles/sun_robot_ros.dir/src/sun_robot_ros/FkineNode.cpp.o 

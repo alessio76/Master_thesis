@@ -1,8 +1,0 @@
-prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
-
-Name: sun_robot_lib
-Description: Description of sun_robot_lib
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib -lsun_robot_lib
-Requires: sun_math_toolbox
