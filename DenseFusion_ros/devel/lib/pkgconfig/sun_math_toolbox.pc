@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel
+
+Name: sun_math_toolbox
+Description: Description of sun_math_toolbox
+Version: 0.0.0
+Cflags: -I/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/src/sun_math_toolbox/include
+Libs: -L${prefix}/lib -lsun_math_toolbox
+Requires: ros_toon

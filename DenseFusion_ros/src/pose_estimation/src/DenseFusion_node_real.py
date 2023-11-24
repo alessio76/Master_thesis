@@ -115,7 +115,6 @@ class ImageProcessor:
         self.ts.registerCallback(self.callback)
         self.depth_img=np.zeros((self.height,self.width))
         self.class_id_dict=class_id_dict
-
         self.segmentation_topic=segmentation_topic
         self.result_pub = rospy.Publisher(self.segmentation_topic, Image)
         self.mask_pub = rospy.Publisher(self.mask_topic, mask)
@@ -176,8 +175,7 @@ class ImageProcessor:
         return transform_msg
 
     def callback(self,image_msg,depth_msg):
-        global total_t
-        global iteration_t
+        
         try:
             cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
         except CvBridgeError as e:
@@ -322,7 +320,7 @@ class ImageProcessor:
     
     def depth_callback(self, depth_img):
        
-        depth_data=  self.bridge.imgmsg_to_cv2(depth_img, desired_encoding="passthrough")
+        depth_data= self.bridge.imgmsg_to_cv2(depth_img, desired_encoding="passthrough")
         depth_test=depth_data
         nan_mask = np.isnan(depth_data)
         depth_test=np.copy(depth_data)
@@ -355,6 +353,7 @@ if __name__ == '__main__':
     pose_model.cuda()
     pose_model.load_state_dict(torch.load(pose_model_weight))
     pose_model.eval()
+ 
 
     if refine:
         pose_refine_model_weight=rospy.get_param('~pose_refine_model')

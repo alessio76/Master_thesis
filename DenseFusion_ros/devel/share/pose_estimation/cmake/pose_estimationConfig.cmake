@@ -91,9 +91,9 @@ endif()
 # flag project as catkin-based to distinguish if a find_package()-ed project is a catkin project
 set(pose_estimation_FOUND_CATKIN_PROJECT TRUE)
 
-if(NOT "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include " STREQUAL " ")
+if(NOT "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include;/usr/include/eigen3 " STREQUAL " ")
   set(pose_estimation_INCLUDE_DIRS "")
-  set(_include_dirs "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include")
+  set(_include_dirs "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include;/usr/include/eigen3")
   if(NOT " " STREQUAL " ")
     set(_report "Check the issue tracker '' and consider creating a ticket if the problem has not been reported yet.")
   elseif(NOT " " STREQUAL " ")
@@ -185,7 +185,7 @@ foreach(t ${pose_estimation_EXPORTED_TARGETS})
   endif()
 endforeach()
 
-set(depends "rospy;message_runtime;roscpp")
+set(depends "rospy;message_runtime;moveit_core;moveit_visual_tools;moveit_ros_planning_interface;interactive_markers;tf2_geometry_msgs;actionlib_msgs;roscpp")
 foreach(depend ${depends})
   string(REPLACE " " ";" depend_list ${depend})
   # the package name of the dependency must be kept in a unique variable so that it is not overwritten in recursive calls

@@ -1,21 +1,21 @@
 Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
 Change Dir: /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_d35dd/fast && /usr/bin/make -f CMakeFiles/cmTC_d35dd.dir/build.make CMakeFiles/cmTC_d35dd.dir/build
+Run Build Command(s):/usr/bin/make cmTC_b28d0/fast && /usr/bin/make -f CMakeFiles/cmTC_b28d0.dir/build.make CMakeFiles/cmTC_b28d0.dir/build
 make[1]: Entering directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_d35dd.dir/src.c.o
-/usr/bin/cc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_d35dd.dir/src.c.o   -c /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_d35dd
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d35dd.dir/link.txt --verbose=1
-/usr/bin/cc  -DCMAKE_HAVE_LIBC_PTHREAD    -rdynamic CMakeFiles/cmTC_d35dd.dir/src.c.o  -o cmTC_d35dd 
-/usr/bin/ld: CMakeFiles/cmTC_d35dd.dir/src.c.o: in function `main':
+Building C object CMakeFiles/cmTC_b28d0.dir/src.c.o
+/usr/bin/cc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_b28d0.dir/src.c.o   -c /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b28d0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b28d0.dir/link.txt --verbose=1
+/usr/bin/cc  -DCMAKE_HAVE_LIBC_PTHREAD    -rdynamic CMakeFiles/cmTC_b28d0.dir/src.c.o  -o cmTC_b28d0 
+/usr/bin/ld: CMakeFiles/cmTC_b28d0.dir/src.c.o: in function `main':
 src.c:(.text+0x46): undefined reference to `pthread_create'
 /usr/bin/ld: src.c:(.text+0x52): undefined reference to `pthread_detach'
 /usr/bin/ld: src.c:(.text+0x63): undefined reference to `pthread_join'
 collect2: error: ld returned 1 exit status
-make[1]: *** [CMakeFiles/cmTC_d35dd.dir/build.make:87: cmTC_d35dd] Error 1
+make[1]: *** [CMakeFiles/cmTC_b28d0.dir/build.make:87: cmTC_b28d0] Error 1
 make[1]: Leaving directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
-make: *** [Makefile:121: cmTC_d35dd/fast] Error 2
+make: *** [Makefile:121: cmTC_b28d0/fast] Error 2
 
 
 Source file was:
@@ -41,18 +41,56 @@ int main(void)
 Determining if the function pthread_create exists in the pthreads failed with the following output:
 Change Dir: /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/make cmTC_45192/fast && /usr/bin/make -f CMakeFiles/cmTC_45192.dir/build.make CMakeFiles/cmTC_45192.dir/build
+Run Build Command(s):/usr/bin/make cmTC_24b10/fast && /usr/bin/make -f CMakeFiles/cmTC_24b10.dir/build.make CMakeFiles/cmTC_24b10.dir/build
 make[1]: Entering directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_45192.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_45192.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
-Linking C executable cmTC_45192
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_45192.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_45192.dir/CheckFunctionExists.c.o  -o cmTC_45192  -lpthreads 
+Building C object CMakeFiles/cmTC_24b10.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_24b10.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_24b10
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_24b10.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_24b10.dir/CheckFunctionExists.c.o  -o cmTC_24b10  -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-make[1]: *** [CMakeFiles/cmTC_45192.dir/build.make:87: cmTC_45192] Error 1
+make[1]: *** [CMakeFiles/cmTC_24b10.dir/build.make:87: cmTC_24b10] Error 1
 make[1]: Leaving directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
-make: *** [Makefile:121: cmTC_45192/fast] Error 2
+make: *** [Makefile:121: cmTC_24b10/fast] Error 2
+
+
+
+Determining if the function sgemm_ exists failed with the following output:
+Change Dir: /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_f532e/fast && /usr/bin/make -f CMakeFiles/cmTC_f532e.dir/build.make CMakeFiles/cmTC_f532e.dir/build
+make[1]: Entering directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f532e.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=sgemm_   -o CMakeFiles/cmTC_f532e.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_f532e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f532e.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=sgemm_    -rdynamic CMakeFiles/cmTC_f532e.dir/CheckFunctionExists.c.o  -o cmTC_f532e 
+/usr/bin/ld: CMakeFiles/cmTC_f532e.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `sgemm_'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_f532e.dir/build.make:87: cmTC_f532e] Error 1
+make[1]: Leaving directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_f532e/fast] Error 2
+
+
+
+Determining if the function cheev_ exists failed with the following output:
+Change Dir: /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_d768e/fast && /usr/bin/make -f CMakeFiles/cmTC_d768e.dir/build.make CMakeFiles/cmTC_d768e.dir/build
+make[1]: Entering directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_d768e.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=cheev_   -o CMakeFiles/cmTC_d768e.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_d768e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d768e.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=cheev_    -rdynamic CMakeFiles/cmTC_d768e.dir/CheckFunctionExists.c.o  -o cmTC_d768e  /usr/lib/x86_64-linux-gnu/libblas.so 
+/usr/bin/ld: CMakeFiles/cmTC_d768e.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `cheev_'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_d768e.dir/build.make:88: cmTC_d768e] Error 1
+make[1]: Leaving directory '/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_d768e/fast] Error 2
 
 
 

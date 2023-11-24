@@ -12,16 +12,20 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+  tf2
+  tf2_ros
   sensor_msgs
   moveit_core
-moveit_ros_planning
-moveit_ros_planning_interface
-moveit_ros_perception
-tf2_ros
-    tf2_eigen
-    tf2_geometry_msgs
-    moveit_visual_tools
-    rviz_visual_tools
+  moveit_ros_planning
+  moveit_ros_planning_interface
+  moveit_ros_perception
+  tf2_ros
+  tf2_eigen
+  tf2_geometry_msgs
+  moveit_visual_tools
+  rviz_visual_tools
+  actionlib_msgs
+  moveit_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -64,24 +68,26 @@ add_message_files(
    mask.msg
  )
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   plan_service.srv
+
+ )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+ add_action_files(
+   DIRECTORY action
+   FILES trajectory.action
+ )
 
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
    std_msgs 
-   sensor_msgs # Or other packages containing msgs
+   sensor_msgs
+   trajectory_msgs 
+   actionlib_msgs
+   moveit_msgs
  )
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -120,6 +126,7 @@ CATKIN_DEPENDS rospy message_runtime  moveit_core
     moveit_ros_planning_interface
     interactive_markers
     tf2_geometry_msgs
+    actionlib_msgs
   DEPENDS roscpp  EIGEN3
 )
 
@@ -147,7 +154,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(planning_node src/plan_node.cpp)
+ add_executable(plan_demo src/plan_demo.cpp)
+ add_executable(plan_node src/plan_service.cpp)
+ add_executable(main_node src/main_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -160,7 +169,9 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(planning_node ${catkin_LIBRARIES} )
+ target_link_libraries(plan_demo ${catkin_LIBRARIES})
+ target_link_libraries(plan_node ${catkin_LIBRARIES})
+ target_link_libraries(main_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##

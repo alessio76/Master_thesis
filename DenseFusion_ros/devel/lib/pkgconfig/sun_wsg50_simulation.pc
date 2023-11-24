@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel
+
+Name: sun_wsg50_simulation
+Description: Description of sun_wsg50_simulation
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

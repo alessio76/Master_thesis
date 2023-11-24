@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel
+
+Name: sun_ros_msgs
+Description: Description of sun_ros_msgs
+Version: 0.0.0
+Cflags: -I/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime std_msgs std_srvs

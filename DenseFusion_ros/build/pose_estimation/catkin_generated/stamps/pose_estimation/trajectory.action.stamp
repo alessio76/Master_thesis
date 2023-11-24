@@ -1,0 +1,8 @@
+#goal definition
+trajectory_msgs/JointTrajectory trajectory
+---
+#result definition
+sensor_msgs/JointState final_joint_position
+---
+#feedback
+float64 time_to_complete

@@ -1,0 +1,5 @@
+
+<launch>
+	<include file="$(find yaskawa_moveit_config)/launch/demo.launch"/>
+	<node name="plan_demo" pkg="pose_estimation" type="plan_demo" />
+</launch>

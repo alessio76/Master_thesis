@@ -1,0 +1,12 @@
+(cl:in-package sun_robot_msgs-msg)
+(cl:export '(TRAJECTORY-VAL
+          TRAJECTORY
+          SAMPLING_FREQ-VAL
+          SAMPLING_FREQ
+          USE_EXPONENTIAL_JUNCTION-VAL
+          USE_EXPONENTIAL_JUNCTION
+          INITIAL_JOINTS-VAL
+          INITIAL_JOINTS
+          JUNCTION_TIME_CONSTANT-VAL
+          JUNCTION_TIME_CONSTANT
+))

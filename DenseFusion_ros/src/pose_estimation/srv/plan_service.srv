@@ -1,0 +1,5 @@
+geometry_msgs/Transform goal_transform
+string planning_group
+---
+moveit_msgs/RobotTrajectory trajectory
+bool success

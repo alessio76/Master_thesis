@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
+
+Name: sun_systems_lib
+Description: Description of sun_systems_lib
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: ros_toon

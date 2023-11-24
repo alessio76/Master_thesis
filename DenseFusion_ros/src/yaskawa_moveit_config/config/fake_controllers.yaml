@@ -9,6 +9,7 @@ controller_list:
       - joint_r
       - joint_b
       - joint_t
+    
   - name: fake_gripper_controller
     type: $(arg fake_execution_type)
     joints:
@@ -16,3 +17,6 @@ controller_list:
 initial:  # Define initial robot poses per group
   - group: yaskawa_arm
     pose: zero
+    
+    
+  

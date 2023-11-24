@@ -68,6 +68,18 @@ install/strip/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
@@ -90,6 +102,17 @@ list_install_components/fast: list_install_components
 
 .PHONY : list_install_components/fast
 
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
+
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -101,18 +124,6 @@ edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
 
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
-
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
-
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
@@ -123,17 +134,6 @@ test:
 test/fast: test
 
 .PHONY : test/fast
-
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -168,6 +168,36 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+pose_estimation/CMakeFiles/main_node.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/main_node.dir/rule
+.PHONY : pose_estimation/CMakeFiles/main_node.dir/rule
+
+# Convenience name for target.
+main_node: pose_estimation/CMakeFiles/main_node.dir/rule
+
+.PHONY : main_node
+
+# fast build rule for target.
+main_node/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/main_node.dir/build.make pose_estimation/CMakeFiles/main_node.dir/build
+.PHONY : main_node/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/plan_demo.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/plan_demo.dir/rule
+.PHONY : pose_estimation/CMakeFiles/plan_demo.dir/rule
+
+# Convenience name for target.
+plan_demo: pose_estimation/CMakeFiles/plan_demo.dir/rule
+
+.PHONY : plan_demo
+
+# fast build rule for target.
+plan_demo/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_demo.dir/build.make pose_estimation/CMakeFiles/plan_demo.dir/build
+.PHONY : plan_demo/fast
+
+# Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_genpy.dir/rule:
 	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/pose_estimation_genpy.dir/rule
 .PHONY : pose_estimation/CMakeFiles/pose_estimation_genpy.dir/rule
@@ -196,21 +226,6 @@ pose_estimation_generate_messages_py: pose_estimation/CMakeFiles/pose_estimation
 pose_estimation_generate_messages_py/fast:
 	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/pose_estimation_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/pose_estimation_generate_messages_py.dir/build
 .PHONY : pose_estimation_generate_messages_py/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
-
-# Convenience name for target.
-pose_estimation_gennodejs: pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
-
-.PHONY : pose_estimation_gennodejs
-
-# fast build rule for target.
-pose_estimation_gennodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/build.make pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/build
-.PHONY : pose_estimation_gennodejs/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_generate_messages_nodejs.dir/rule:
@@ -258,276 +273,6 @@ pose_estimation_generate_messages_lisp/fast:
 .PHONY : pose_estimation_generate_messages_lisp/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-.PHONY : pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_py: pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_py
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_py/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build
-.PHONY : rosgraph_msgs_generate_messages_py/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_lisp: pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-.PHONY : roscpp_generate_messages_lisp
-
-# fast build rule for target.
-roscpp_generate_messages_lisp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/roscpp_generate_messages_lisp.dir/build
-.PHONY : roscpp_generate_messages_lisp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_cpp
-
-# fast build rule for target.
-geometry_msgs_generate_messages_cpp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build
-.PHONY : geometry_msgs_generate_messages_cpp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_nodejs
-
-# fast build rule for target.
-geometry_msgs_generate_messages_nodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build
-.PHONY : geometry_msgs_generate_messages_nodejs/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_lisp
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_lisp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build
-.PHONY : rosgraph_msgs_generate_messages_lisp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-.PHONY : pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_eus: pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_eus
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_eus/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build
-.PHONY : rosgraph_msgs_generate_messages_eus/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : std_msgs_generate_messages_cpp
-
-# fast build rule for target.
-std_msgs_generate_messages_cpp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/std_msgs_generate_messages_cpp.dir/build
-.PHONY : std_msgs_generate_messages_cpp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_cpp
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_cpp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
-.PHONY : rosgraph_msgs_generate_messages_cpp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_nodejs: pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-.PHONY : roscpp_generate_messages_nodejs
-
-# fast build rule for target.
-roscpp_generate_messages_nodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/roscpp_generate_messages_nodejs.dir/build
-.PHONY : roscpp_generate_messages_nodejs/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-.PHONY : pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-std_msgs_generate_messages_eus: pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/rule
-
-.PHONY : std_msgs_generate_messages_eus
-
-# fast build rule for target.
-std_msgs_generate_messages_eus/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/std_msgs_generate_messages_eus.dir/build
-.PHONY : std_msgs_generate_messages_eus/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_lisp
-
-# fast build rule for target.
-geometry_msgs_generate_messages_lisp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build
-.PHONY : geometry_msgs_generate_messages_lisp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/rule
-.PHONY : pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_py: pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/rule
-
-.PHONY : roscpp_generate_messages_py
-
-# fast build rule for target.
-roscpp_generate_messages_py/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/roscpp_generate_messages_py.dir/build
-.PHONY : roscpp_generate_messages_py/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_nodejs
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_nodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
-.PHONY : rosgraph_msgs_generate_messages_nodejs/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-.PHONY : pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_eus: pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-.PHONY : roscpp_generate_messages_eus
-
-# fast build rule for target.
-roscpp_generate_messages_eus/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/roscpp_generate_messages_eus.dir/build
-.PHONY : roscpp_generate_messages_eus/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-sensor_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : sensor_msgs_generate_messages_lisp
-
-# fast build rule for target.
-sensor_msgs_generate_messages_lisp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build
-.PHONY : sensor_msgs_generate_messages_lisp/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-sensor_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
-
-.PHONY : sensor_msgs_generate_messages_nodejs
-
-# fast build rule for target.
-sensor_msgs_generate_messages_nodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build
-.PHONY : sensor_msgs_generate_messages_nodejs/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
-.PHONY : pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-sensor_msgs_generate_messages_py: pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
-
-.PHONY : sensor_msgs_generate_messages_py
-
-# fast build rule for target.
-sensor_msgs_generate_messages_py/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/sensor_msgs_generate_messages_py.dir/build
-.PHONY : sensor_msgs_generate_messages_py/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
-.PHONY : pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_py: pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_py
-
-# fast build rule for target.
-geometry_msgs_generate_messages_py/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/geometry_msgs_generate_messages_py.dir/build
-.PHONY : geometry_msgs_generate_messages_py/fast
-
-# Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_generate_messages_cpp.dir/rule:
 	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/pose_estimation_generate_messages_cpp.dir/rule
 .PHONY : pose_estimation/CMakeFiles/pose_estimation_generate_messages_cpp.dir/rule
@@ -541,6 +286,351 @@ pose_estimation_generate_messages_cpp: pose_estimation/CMakeFiles/pose_estimatio
 pose_estimation_generate_messages_cpp/fast:
 	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/pose_estimation_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/pose_estimation_generate_messages_cpp.dir/build
 .PHONY : pose_estimation_generate_messages_cpp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/plan_node.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/plan_node.dir/rule
+.PHONY : pose_estimation/CMakeFiles/plan_node.dir/rule
+
+# Convenience name for target.
+plan_node: pose_estimation/CMakeFiles/plan_node.dir/rule
+
+.PHONY : plan_node
+
+# fast build rule for target.
+plan_node/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_node.dir/build.make pose_estimation/CMakeFiles/plan_node.dir/build
+.PHONY : plan_node/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionFeedback
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionFeedback.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionFeedback/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionGoal: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionGoal
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionGoal/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionGoal.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionGoal/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryAction: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryAction
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryAction/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryAction.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryAction/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
+
+# Convenience name for target.
+pose_estimation_gennodejs: pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/rule
+
+.PHONY : pose_estimation_gennodejs
+
+# fast build rule for target.
+pose_estimation_gennodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/build.make pose_estimation/CMakeFiles/pose_estimation_gennodejs.dir/build
+.PHONY : pose_estimation_gennodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/rule
+.PHONY : pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/rule
+
+# Convenience name for target.
+shape_msgs_generate_messages_py: pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/rule
+
+.PHONY : shape_msgs_generate_messages_py
+
+# fast build rule for target.
+shape_msgs_generate_messages_py/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/shape_msgs_generate_messages_py.dir/build
+.PHONY : shape_msgs_generate_messages_py/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/rule
+.PHONY : pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+object_recognition_msgs_generate_messages_eus: pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/rule
+
+.PHONY : object_recognition_msgs_generate_messages_eus
+
+# fast build rule for target.
+object_recognition_msgs_generate_messages_eus/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_eus.dir/build
+.PHONY : object_recognition_msgs_generate_messages_eus/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+object_recognition_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/rule
+
+.PHONY : object_recognition_msgs_generate_messages_lisp
+
+# fast build rule for target.
+object_recognition_msgs_generate_messages_lisp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_lisp.dir/build
+.PHONY : object_recognition_msgs_generate_messages_lisp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/rule
+
+# Convenience name for target.
+moveit_msgs_generate_messages_py: pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/rule
+
+.PHONY : moveit_msgs_generate_messages_py
+
+# fast build rule for target.
+moveit_msgs_generate_messages_py/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/moveit_msgs_generate_messages_py.dir/build
+.PHONY : moveit_msgs_generate_messages_py/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+moveit_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : moveit_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+moveit_msgs_generate_messages_nodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/moveit_msgs_generate_messages_nodejs.dir/build
+.PHONY : moveit_msgs_generate_messages_nodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+shape_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : shape_msgs_generate_messages_cpp
+
+# fast build rule for target.
+shape_msgs_generate_messages_cpp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/shape_msgs_generate_messages_cpp.dir/build
+.PHONY : shape_msgs_generate_messages_cpp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+moveit_msgs_generate_messages_eus: pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/rule
+
+.PHONY : moveit_msgs_generate_messages_eus
+
+# fast build rule for target.
+moveit_msgs_generate_messages_eus/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/moveit_msgs_generate_messages_eus.dir/build
+.PHONY : moveit_msgs_generate_messages_eus/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+moveit_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : moveit_msgs_generate_messages_cpp
+
+# fast build rule for target.
+moveit_msgs_generate_messages_cpp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/moveit_msgs_generate_messages_cpp.dir/build
+.PHONY : moveit_msgs_generate_messages_cpp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+shape_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : shape_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+shape_msgs_generate_messages_nodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/shape_msgs_generate_messages_nodejs.dir/build
+.PHONY : shape_msgs_generate_messages_nodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryGoal: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryGoal
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryGoal/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryGoal.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryGoal/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/rule
+.PHONY : pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/rule
+
+# Convenience name for target.
+object_recognition_msgs_generate_messages_py: pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/rule
+
+.PHONY : object_recognition_msgs_generate_messages_py
+
+# fast build rule for target.
+object_recognition_msgs_generate_messages_py/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_py.dir/build
+.PHONY : object_recognition_msgs_generate_messages_py/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_plan_service: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_plan_service
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_plan_service/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_plan_service.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_plan_service/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryResult: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryResult
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryResult/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryResult.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryResult/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+shape_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/rule
+
+.PHONY : shape_msgs_generate_messages_lisp
+
+# fast build rule for target.
+shape_msgs_generate_messages_lisp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/shape_msgs_generate_messages_lisp.dir/build
+.PHONY : shape_msgs_generate_messages_lisp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/rule
+.PHONY : pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+shape_msgs_generate_messages_eus: pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/rule
+
+.PHONY : shape_msgs_generate_messages_eus
+
+# fast build rule for target.
+shape_msgs_generate_messages_eus/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/shape_msgs_generate_messages_eus.dir/build
+.PHONY : shape_msgs_generate_messages_eus/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryFeedback: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryFeedback
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryFeedback/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryFeedback.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryFeedback/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+object_recognition_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : object_recognition_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+object_recognition_msgs_generate_messages_nodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_nodejs.dir/build
+.PHONY : object_recognition_msgs_generate_messages_nodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+octomap_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : octomap_msgs_generate_messages_cpp
+
+# fast build rule for target.
+octomap_msgs_generate_messages_cpp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/octomap_msgs_generate_messages_cpp.dir/build
+.PHONY : octomap_msgs_generate_messages_cpp/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_gencpp.dir/rule:
@@ -558,34 +648,19 @@ pose_estimation_gencpp/fast:
 .PHONY : pose_estimation_gencpp/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/rule
-.PHONY : pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/rule
+pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/rule
+.PHONY : pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/rule
 
 # Convenience name for target.
-std_msgs_generate_messages_py: pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/rule
+octomap_msgs_generate_messages_py: pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/rule
 
-.PHONY : std_msgs_generate_messages_py
+.PHONY : octomap_msgs_generate_messages_py
 
 # fast build rule for target.
-std_msgs_generate_messages_py/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/std_msgs_generate_messages_py.dir/build
-.PHONY : std_msgs_generate_messages_py/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-sensor_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : sensor_msgs_generate_messages_cpp
-
-# fast build rule for target.
-sensor_msgs_generate_messages_cpp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build
-.PHONY : sensor_msgs_generate_messages_cpp/fast
+octomap_msgs_generate_messages_py/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/octomap_msgs_generate_messages_py.dir/build
+.PHONY : octomap_msgs_generate_messages_py/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_geneus.dir/rule:
@@ -603,34 +678,94 @@ pose_estimation_geneus/fast:
 .PHONY : pose_estimation_geneus/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
-.PHONY : pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
+pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/rule
 
 # Convenience name for target.
-std_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/rule
+moveit_ros_planning_gencfg: pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/rule
 
-.PHONY : std_msgs_generate_messages_nodejs
+.PHONY : moveit_ros_planning_gencfg
 
 # fast build rule for target.
-std_msgs_generate_messages_nodejs/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/std_msgs_generate_messages_nodejs.dir/build
-.PHONY : std_msgs_generate_messages_nodejs/fast
+moveit_ros_planning_gencfg/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/build.make pose_estimation/CMakeFiles/moveit_ros_planning_gencfg.dir/build
+.PHONY : moveit_ros_planning_gencfg/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
-.PHONY : pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
+pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/rule
 
 # Convenience name for target.
-geometry_msgs_generate_messages_eus: pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
+octomap_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/rule
 
-.PHONY : geometry_msgs_generate_messages_eus
+.PHONY : octomap_msgs_generate_messages_lisp
 
 # fast build rule for target.
-geometry_msgs_generate_messages_eus/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build
-.PHONY : geometry_msgs_generate_messages_eus/fast
+octomap_msgs_generate_messages_lisp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/octomap_msgs_generate_messages_lisp.dir/build
+.PHONY : octomap_msgs_generate_messages_lisp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/rule
+
+# Convenience name for target.
+moveit_ros_manipulation_gencfg: pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/rule
+
+.PHONY : moveit_ros_manipulation_gencfg
+
+# fast build rule for target.
+moveit_ros_manipulation_gencfg/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/build.make pose_estimation/CMakeFiles/moveit_ros_manipulation_gencfg.dir/build
+.PHONY : moveit_ros_manipulation_gencfg/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+graph_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : graph_msgs_generate_messages_cpp
+
+# fast build rule for target.
+graph_msgs_generate_messages_cpp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/graph_msgs_generate_messages_cpp.dir/build
+.PHONY : graph_msgs_generate_messages_cpp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+octomap_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : octomap_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+octomap_msgs_generate_messages_nodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/octomap_msgs_generate_messages_nodejs.dir/build
+.PHONY : octomap_msgs_generate_messages_nodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/rule
+.PHONY : pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+graph_msgs_generate_messages_eus: pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/rule
+
+.PHONY : graph_msgs_generate_messages_eus
+
+# fast build rule for target.
+graph_msgs_generate_messages_eus/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/graph_msgs_generate_messages_eus.dir/build
+.PHONY : graph_msgs_generate_messages_eus/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_generate_messages_eus.dir/rule:
@@ -648,34 +783,19 @@ pose_estimation_generate_messages_eus/fast:
 .PHONY : pose_estimation_generate_messages_eus/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
-.PHONY : pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
+pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/rule
 
 # Convenience name for target.
-sensor_msgs_generate_messages_eus: pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
+graph_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/rule
 
-.PHONY : sensor_msgs_generate_messages_eus
+.PHONY : graph_msgs_generate_messages_lisp
 
 # fast build rule for target.
-sensor_msgs_generate_messages_eus/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build
-.PHONY : sensor_msgs_generate_messages_eus/fast
-
-# Convenience name for target.
-pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_cpp: pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
-
-.PHONY : roscpp_generate_messages_cpp
-
-# fast build rule for target.
-roscpp_generate_messages_cpp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/roscpp_generate_messages_cpp.dir/build
-.PHONY : roscpp_generate_messages_cpp/fast
+graph_msgs_generate_messages_lisp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/graph_msgs_generate_messages_lisp.dir/build
+.PHONY : graph_msgs_generate_messages_lisp/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/pose_estimation_generate_messages.dir/rule:
@@ -693,19 +813,19 @@ pose_estimation_generate_messages/fast:
 .PHONY : pose_estimation_generate_messages/fast
 
 # Convenience name for target.
-pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
-.PHONY : pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
+pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/rule
 
 # Convenience name for target.
-std_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/rule
+moveit_msgs_generate_messages_lisp: pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/rule
 
-.PHONY : std_msgs_generate_messages_lisp
+.PHONY : moveit_msgs_generate_messages_lisp
 
 # fast build rule for target.
-std_msgs_generate_messages_lisp/fast:
-	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/std_msgs_generate_messages_lisp.dir/build
-.PHONY : std_msgs_generate_messages_lisp/fast
+moveit_msgs_generate_messages_lisp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/build.make pose_estimation/CMakeFiles/moveit_msgs_generate_messages_lisp.dir/build
+.PHONY : moveit_msgs_generate_messages_lisp/fast
 
 # Convenience name for target.
 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_mask.dir/rule:
@@ -722,6 +842,162 @@ _pose_estimation_generate_messages_check_deps_mask/fast:
 	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_mask.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_mask.dir/build
 .PHONY : _pose_estimation_generate_messages_check_deps_mask/fast
 
+# Convenience name for target.
+pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/rule
+.PHONY : pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+octomap_msgs_generate_messages_eus: pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/rule
+
+.PHONY : octomap_msgs_generate_messages_eus
+
+# fast build rule for target.
+octomap_msgs_generate_messages_eus/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/build.make pose_estimation/CMakeFiles/octomap_msgs_generate_messages_eus.dir/build
+.PHONY : octomap_msgs_generate_messages_eus/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/rule
+.PHONY : pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+graph_msgs_generate_messages_nodejs: pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : graph_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+graph_msgs_generate_messages_nodejs/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/build.make pose_estimation/CMakeFiles/graph_msgs_generate_messages_nodejs.dir/build
+.PHONY : graph_msgs_generate_messages_nodejs/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/rule
+.PHONY : pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/rule
+
+# Convenience name for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionResult: pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/rule
+
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionResult
+
+# fast build rule for target.
+_pose_estimation_generate_messages_check_deps_trajectoryActionResult/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/build.make pose_estimation/CMakeFiles/_pose_estimation_generate_messages_check_deps_trajectoryActionResult.dir/build
+.PHONY : _pose_estimation_generate_messages_check_deps_trajectoryActionResult/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/rule
+.PHONY : pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+object_recognition_msgs_generate_messages_cpp: pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : object_recognition_msgs_generate_messages_cpp
+
+# fast build rule for target.
+object_recognition_msgs_generate_messages_cpp/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/build.make pose_estimation/CMakeFiles/object_recognition_msgs_generate_messages_cpp.dir/build
+.PHONY : object_recognition_msgs_generate_messages_cpp/fast
+
+# Convenience name for target.
+pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/rule:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f CMakeFiles/Makefile2 pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/rule
+.PHONY : pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/rule
+
+# Convenience name for target.
+graph_msgs_generate_messages_py: pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/rule
+
+.PHONY : graph_msgs_generate_messages_py
+
+# fast build rule for target.
+graph_msgs_generate_messages_py/fast:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/build.make pose_estimation/CMakeFiles/graph_msgs_generate_messages_py.dir/build
+.PHONY : graph_msgs_generate_messages_py/fast
+
+src/main_node.o: src/main_node.cpp.o
+
+.PHONY : src/main_node.o
+
+# target to build an object file
+src/main_node.cpp.o:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/main_node.dir/build.make pose_estimation/CMakeFiles/main_node.dir/src/main_node.cpp.o
+.PHONY : src/main_node.cpp.o
+
+src/main_node.i: src/main_node.cpp.i
+
+.PHONY : src/main_node.i
+
+# target to preprocess a source file
+src/main_node.cpp.i:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/main_node.dir/build.make pose_estimation/CMakeFiles/main_node.dir/src/main_node.cpp.i
+.PHONY : src/main_node.cpp.i
+
+src/main_node.s: src/main_node.cpp.s
+
+.PHONY : src/main_node.s
+
+# target to generate assembly for a file
+src/main_node.cpp.s:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/main_node.dir/build.make pose_estimation/CMakeFiles/main_node.dir/src/main_node.cpp.s
+.PHONY : src/main_node.cpp.s
+
+src/plan_demo.o: src/plan_demo.cpp.o
+
+.PHONY : src/plan_demo.o
+
+# target to build an object file
+src/plan_demo.cpp.o:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_demo.dir/build.make pose_estimation/CMakeFiles/plan_demo.dir/src/plan_demo.cpp.o
+.PHONY : src/plan_demo.cpp.o
+
+src/plan_demo.i: src/plan_demo.cpp.i
+
+.PHONY : src/plan_demo.i
+
+# target to preprocess a source file
+src/plan_demo.cpp.i:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_demo.dir/build.make pose_estimation/CMakeFiles/plan_demo.dir/src/plan_demo.cpp.i
+.PHONY : src/plan_demo.cpp.i
+
+src/plan_demo.s: src/plan_demo.cpp.s
+
+.PHONY : src/plan_demo.s
+
+# target to generate assembly for a file
+src/plan_demo.cpp.s:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_demo.dir/build.make pose_estimation/CMakeFiles/plan_demo.dir/src/plan_demo.cpp.s
+.PHONY : src/plan_demo.cpp.s
+
+src/plan_service.o: src/plan_service.cpp.o
+
+.PHONY : src/plan_service.o
+
+# target to build an object file
+src/plan_service.cpp.o:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_node.dir/build.make pose_estimation/CMakeFiles/plan_node.dir/src/plan_service.cpp.o
+.PHONY : src/plan_service.cpp.o
+
+src/plan_service.i: src/plan_service.cpp.i
+
+.PHONY : src/plan_service.i
+
+# target to preprocess a source file
+src/plan_service.cpp.i:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_node.dir/build.make pose_estimation/CMakeFiles/plan_node.dir/src/plan_service.cpp.i
+.PHONY : src/plan_service.cpp.i
+
+src/plan_service.s: src/plan_service.cpp.s
+
+.PHONY : src/plan_service.s
+
+# target to generate assembly for a file
+src/plan_service.cpp.s:
+	cd /home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build && $(MAKE) -f pose_estimation/CMakeFiles/plan_node.dir/build.make pose_estimation/CMakeFiles/plan_node.dir/src/plan_service.cpp.s
+.PHONY : src/plan_service.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -729,49 +1005,71 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... install/strip"
+	@echo "... install/local"
 	@echo "... install"
 	@echo "... list_install_components"
+	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... test"
+	@echo "... main_node"
+	@echo "... plan_demo"
 	@echo "... pose_estimation_genpy"
 	@echo "... pose_estimation_generate_messages_py"
-	@echo "... pose_estimation_gennodejs"
 	@echo "... pose_estimation_generate_messages_nodejs"
 	@echo "... pose_estimation_genlisp"
 	@echo "... pose_estimation_generate_messages_lisp"
-	@echo "... rosgraph_msgs_generate_messages_py"
-	@echo "... roscpp_generate_messages_lisp"
-	@echo "... geometry_msgs_generate_messages_cpp"
-	@echo "... geometry_msgs_generate_messages_nodejs"
-	@echo "... rosgraph_msgs_generate_messages_lisp"
-	@echo "... install/local"
-	@echo "... rosgraph_msgs_generate_messages_eus"
-	@echo "... std_msgs_generate_messages_cpp"
-	@echo "... test"
-	@echo "... rosgraph_msgs_generate_messages_cpp"
-	@echo "... roscpp_generate_messages_nodejs"
-	@echo "... std_msgs_generate_messages_eus"
-	@echo "... geometry_msgs_generate_messages_lisp"
-	@echo "... roscpp_generate_messages_py"
-	@echo "... rosgraph_msgs_generate_messages_nodejs"
-	@echo "... rebuild_cache"
-	@echo "... roscpp_generate_messages_eus"
-	@echo "... sensor_msgs_generate_messages_lisp"
-	@echo "... sensor_msgs_generate_messages_nodejs"
-	@echo "... sensor_msgs_generate_messages_py"
-	@echo "... geometry_msgs_generate_messages_py"
 	@echo "... pose_estimation_generate_messages_cpp"
+	@echo "... plan_node"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryActionFeedback"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryActionGoal"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryAction"
+	@echo "... pose_estimation_gennodejs"
+	@echo "... shape_msgs_generate_messages_py"
+	@echo "... object_recognition_msgs_generate_messages_eus"
+	@echo "... object_recognition_msgs_generate_messages_lisp"
+	@echo "... moveit_msgs_generate_messages_py"
+	@echo "... moveit_msgs_generate_messages_nodejs"
+	@echo "... shape_msgs_generate_messages_cpp"
+	@echo "... moveit_msgs_generate_messages_eus"
+	@echo "... moveit_msgs_generate_messages_cpp"
+	@echo "... shape_msgs_generate_messages_nodejs"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryGoal"
+	@echo "... object_recognition_msgs_generate_messages_py"
+	@echo "... _pose_estimation_generate_messages_check_deps_plan_service"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryResult"
+	@echo "... shape_msgs_generate_messages_lisp"
+	@echo "... shape_msgs_generate_messages_eus"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryFeedback"
+	@echo "... object_recognition_msgs_generate_messages_nodejs"
+	@echo "... octomap_msgs_generate_messages_cpp"
 	@echo "... pose_estimation_gencpp"
-	@echo "... std_msgs_generate_messages_py"
-	@echo "... sensor_msgs_generate_messages_cpp"
+	@echo "... octomap_msgs_generate_messages_py"
 	@echo "... pose_estimation_geneus"
-	@echo "... std_msgs_generate_messages_nodejs"
-	@echo "... geometry_msgs_generate_messages_eus"
+	@echo "... moveit_ros_planning_gencfg"
+	@echo "... octomap_msgs_generate_messages_lisp"
+	@echo "... moveit_ros_manipulation_gencfg"
+	@echo "... graph_msgs_generate_messages_cpp"
+	@echo "... octomap_msgs_generate_messages_nodejs"
+	@echo "... graph_msgs_generate_messages_eus"
 	@echo "... pose_estimation_generate_messages_eus"
-	@echo "... sensor_msgs_generate_messages_eus"
-	@echo "... roscpp_generate_messages_cpp"
+	@echo "... graph_msgs_generate_messages_lisp"
 	@echo "... pose_estimation_generate_messages"
-	@echo "... std_msgs_generate_messages_lisp"
+	@echo "... moveit_msgs_generate_messages_lisp"
 	@echo "... _pose_estimation_generate_messages_check_deps_mask"
+	@echo "... octomap_msgs_generate_messages_eus"
+	@echo "... graph_msgs_generate_messages_nodejs"
+	@echo "... _pose_estimation_generate_messages_check_deps_trajectoryActionResult"
+	@echo "... object_recognition_msgs_generate_messages_cpp"
+	@echo "... graph_msgs_generate_messages_py"
+	@echo "... src/main_node.o"
+	@echo "... src/main_node.i"
+	@echo "... src/main_node.s"
+	@echo "... src/plan_demo.o"
+	@echo "... src/plan_demo.i"
+	@echo "... src/plan_demo.s"
+	@echo "... src/plan_service.o"
+	@echo "... src/plan_service.i"
+	@echo "... src/plan_service.s"
 .PHONY : help
 
 

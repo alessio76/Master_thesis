@@ -46,6 +46,26 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pose_estimation/srv" TYPE FILE FILES "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/src/pose_estimation/srv/plan_service.srv")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pose_estimation/action" TYPE FILE FILES "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/src/pose_estimation/action/trajectory.action")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pose_estimation/msg" TYPE FILE FILES
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryAction.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryActionGoal.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryActionResult.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryActionFeedback.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryGoal.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryResult.msg"
+    "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel/share/pose_estimation/msg/trajectoryFeedback.msg"
+    )
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pose_estimation/cmake" TYPE FILE FILES "/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/build/pose_estimation/catkin_generated/installspace/pose_estimation-msg-paths.cmake")
 endif()
 

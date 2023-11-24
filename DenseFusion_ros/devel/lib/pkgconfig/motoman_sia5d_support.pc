@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/devel
+
+Name: motoman_sia5d_support
+Description: Description of motoman_sia5d_support
+Version: 0.3.3
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,8 @@
+prefix=/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion_ros/install
+
+Name: sun_yaskawa_nodes
+Description: Description of sun_yaskawa_nodes
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib -lyaskawa_fkine_nodelet
+Requires: nodelet pluginlib

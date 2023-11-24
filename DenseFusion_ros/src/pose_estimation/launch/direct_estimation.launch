@@ -7,14 +7,14 @@
     <arg name="view_mask" default="False" />
 
     <!-- Visualize binary mask  -->
-    <arg name="set_debug" default="True" />
+    <arg name="set_debug" default="False" />
 
     <!-- topic to publish the images of the camera -->
     <arg name="image_topic" default="/camera/color/image_raw" />
     <arg name="segmentation_topic" default="/camera/color/segmentation_result" />
     <arg name="mask_topic" default="/camera/mask_result" />
     <arg name="mask_image_topic" default="/camera/mask_image" />
-    <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" />
+    <param name="depth_topic_name" value="/camera/depth/image_rect_raw" />
 
     <!-- parameters to commond use -->
     <param name="image_topic_name" value="$(arg image_topic)" />
@@ -45,8 +45,10 @@
         <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
         
         <param name="refine" value="$(arg refine)" />
-        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_19_0.025406306836892375.pth" />
+        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_29_0.008671074496061243.pth" />
+        <!--
         <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_116_0.01558202758204158.pth" />
+        -->
         <!-- Camera parameters -->
         <param name="cx" value="317.7075500488281" />
         <param name="cy" value="238.1421356201172" />
