@@ -1,0 +1,13 @@
+# The trajectory to execute
+moveit_msgs/RobotTrajectory trajectory
+
+---
+
+# Error code - encodes the overall reason for failure
+moveit_msgs/MoveItErrorCodes error_code
+
+---
+
+# The internal state that the move group action currently is in
+string state
+

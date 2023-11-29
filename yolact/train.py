@@ -440,8 +440,7 @@ def train():
                 if epoch % args.validation_epoch == 0 and epoch > 0:
                     #compute current precision mAP
                     mAP_now = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)['mask']['all']
-                    validation_errors, best_model, best_mAP = validation_check(yolact_net, mAP_now, validation_errors, mAP_old, best_mAP,best_model,
-                                                                               epoch,iteration)
+                    validation_errors, best_model, best_mAP = validation_check(yolact_net, mAP_now, validation_errors, mAP_old, best_mAP,best_model)
                     if best_mAP < mAP_now:
                         yolact_net.save_weights(save_path(epoch, iteration))
                     mAP_old=mAP_now

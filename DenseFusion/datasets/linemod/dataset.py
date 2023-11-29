@@ -6,6 +6,7 @@ import errno
 import torch
 import json
 import codecs
+import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import torchvision.transforms as transforms
@@ -63,7 +64,7 @@ class PoseDataset(data.Dataset):
                 self.list_rank.append(int(input_line))
 
             meta_file = open('{0}/data/{1}/gt.yml'.format(self.root, '%02d' % item), 'r')
-            self.meta[item] = yaml.load(meta_file)
+            self.meta[item] = yaml.safe_load(meta_file)
             self.pt[item] = ply_vtx('{0}/models/obj_{1}.ply'.format(self.root, '%02d' % item))
             
             print("Object {0} buffer loaded".format(item))
@@ -181,6 +182,17 @@ class PoseDataset(data.Dataset):
         else:
             target = np.add(target, target_t / 1000.0)
             out_t = target_t / 1000.0
+
+        fig2= plt.figure()
+        ax1 = fig2.add_subplot(projection='3d')
+        ax1.scatter(target[:,0],target[:,1], target[:,2],c='g')
+        #ax1.scatter(target_t[1]/1000, target_t[0]/1000, target_t[2]/1000,c='r')
+        ax1.scatter(cloud[:,0], cloud[:,1], cloud[:,2],c='b')
+
+        ax1.set_xlabel('X')
+        ax1.set_ylabel('Y')
+        ax1.set_zlabel('Z')
+        plt.show()
 
         #fw = open('evaluation_result/{0}_tar.xyz'.format(index), 'w')
         #for it in target:

@@ -2,22 +2,19 @@
 <launch>
 
 	<arg name="simulation_arg" default="true" />
-
+	<arg name="trajectory_action_name_arg" default="/trajectory_action_server" />
 	<param name="simulation" value="$(arg simulation_arg)" type="bool"/>
-	<!--
-	<remap from="/trajectory_action/status" to="/execute_trajectory/status" if="$(arg simulation_arg)"/>
-	<remap from="/trajectory_action/cancel" to="/execute_trajectory/cancel" if="$(arg simulation_arg)"/>
-	<remap from="/trajectory_action/feedback" to="/execute_trajectory/feedback" if="$(arg simulation_arg)"/>
-	<remap from="/trajectory_action/goal" to="/execute_trajectory/goal" if="$(arg simulation_arg)"/>
-	<remap from="/trajectory_action/result" to="/execute_trajectory/result" if="$(arg simulation_arg)"/>
+	<param name="trajectory_action_name" value="$(arg trajectory_action_name_arg)" type="string"/>
+	
+	
+	<include file="$(find yaskawa_moveit_config)/launch/demo.launch"/>
+	
 
-	-->
-	<include file="$(find yaskawa_moveit_config)/launch/demo.launch"/> 
+	<remap from="/trajectory_action_server/goal" to="/motoman/joint_ll_control" if="$(arg simulation_arg)"/>
+	
+	
+	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen"/>
 	
 	<node name="plan_server" pkg="pose_estimation" type="plan_node" output="screen"/>
 	<node name="main_node" pkg="pose_estimation" type="main_node" output="screen"/>
-	
-	
-
-
 </launch>

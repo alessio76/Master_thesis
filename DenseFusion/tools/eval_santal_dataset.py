@@ -82,8 +82,6 @@ tresh_list=np.linspace(0, 0.1, n_samples+1)
 success_list=np.zeros(len(tresh_list))
 
 for i, data in enumerate(testdataloader, 0):
-    if(i>40):
-         break
     points_list, choose_list, img_list, target_list, model_points_list, idx_list,path = data
     n_imgs=len(img_list)
     num_count+=n_imgs

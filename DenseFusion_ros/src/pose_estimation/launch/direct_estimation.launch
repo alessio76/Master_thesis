@@ -14,7 +14,7 @@
     <arg name="segmentation_topic" default="/camera/color/segmentation_result" />
     <arg name="mask_topic" default="/camera/mask_result" />
     <arg name="mask_image_topic" default="/camera/mask_image" />
-    <param name="depth_topic_name" value="/camera/depth/image_rect_raw" />
+    <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" />
 
     <!-- parameters to commond use -->
     <param name="image_topic_name" value="$(arg image_topic)" />
@@ -31,12 +31,15 @@
     <!-- Visualize the binary mask -->
     <arg name="min_pixel" default="200" /> 
     <param name="classes" textfile="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/data/santal_dataset/classes.txt" />
+    <param name="tf_camera_frame" value="camera_color_optical_frame" />
+    <param name="base_object_frame_name" value="object_frame" />
 
-
-    <!-- spawn segmentation node -->
+    <!-- spawn node -->
     <node name="estimation_node" pkg="pose_estimation" type="DenseFusion_node_real.py" respawn="true" output="screen">
+
+        <!-- Segmentation paremeters -->
         <param name="top_k" value="5" />
-        <param name="score_threshold" value="0.9" />
+        <param name="score_threshold" value="0.8" />
         <param name="display_masks" value="True" />
         <param name="display_bboxes" value="True" />
         <param name="display_text" value="True" />
@@ -44,11 +47,11 @@
         <param name="display_crop" value="True" />
         <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
         
+        <!-- Pose estimation paremeters -->
         <param name="refine" value="$(arg refine)" />
-        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_29_0.008671074496061243.pth" />
-        <!--
-        <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_116_0.01558202758204158.pth" />
-        -->
+        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_38_0.008200949688499323.pth" />
+        <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_113_0.003690717733536428.pth" />
+        
         <!-- Camera parameters -->
         <param name="cx" value="317.7075500488281" />
         <param name="cy" value="238.1421356201172" />
@@ -60,7 +63,7 @@
         <param name="objects_of_interest" value="santal_ace" />
         <param name="cloud_base_path" value="/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_ace" />
         <param name="view_segmentation" value="$(arg view_segmentation)" />
-        <param name="tf_camera_frame" value="camera_color_optical_frame" />
+       
     </node>
 
     <!-- spawn node to visualize the binary masks -->

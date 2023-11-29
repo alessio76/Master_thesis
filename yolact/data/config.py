@@ -227,8 +227,10 @@ my_dataset = dataset_base.copy({
 santal_dataset = dataset_base.copy({
    'name': 'Santal Dataset',
                                        
-    'train_images': '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset/train',
-    'valid_images': '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset/val',
+    'train_images': '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/train',
+                    
+
+    'valid_images': '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/val',
    
 
     'train_info': './data/santal_dataset/train.json',

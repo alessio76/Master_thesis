@@ -77,7 +77,7 @@ add_message_files(
 ## Generate actions in the 'action' folder
  add_action_files(
    DIRECTORY action
-   FILES trajectory.action
+   FILES Trajectory.action
  )
 
 ## Generate added messages and services with any dependencies listed here
@@ -139,6 +139,7 @@ CATKIN_DEPENDS rospy message_runtime  moveit_core
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  include
 )
 
 ## Declare a C++ library
@@ -157,6 +158,7 @@ include_directories(
  add_executable(plan_demo src/plan_demo.cpp)
  add_executable(plan_node src/plan_service.cpp)
  add_executable(main_node src/main_node.cpp)
+ add_executable(trajectory_action_server src/trajectory_action_server.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -172,6 +174,7 @@ include_directories(
  target_link_libraries(plan_demo ${catkin_LIBRARIES})
  target_link_libraries(plan_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
+ target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
 
 #############
 ## Install ##

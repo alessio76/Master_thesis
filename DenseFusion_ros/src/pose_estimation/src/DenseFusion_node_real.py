@@ -8,17 +8,9 @@ from utils.augmentations import FastBaseTransform
 from utils import timer
 from layers.output_utils import postprocess, undo_image_transformation
 from data import cfg
-import rospy
-import warnings
 from pose_estimation.msg import mask
 from std_msgs.msg import MultiArrayLayout, MultiArrayDimension
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
-import numpy as np
-import cv2
-import torch
 from collections import defaultdict
-from pose_estimation.msg import mask
 import random
 import copy
 import numpy as np
@@ -104,6 +96,7 @@ class ImageProcessor:
         self.pose_model=pose_model
         self.pose_refinement_model=pose_refinement_model
         self.minimum_num_pt=min_pixel
+        self.base_object_frame_name=rospy.get_param('base_object_frame_name')
         self.height=rospy.get_param('height')
         self.width=rospy.get_param('width')
         image_sub=message_filters.Subscriber(self.image_topic, Image)
@@ -111,7 +104,7 @@ class ImageProcessor:
         self.ts = message_filters.ApproximateTimeSynchronizer([image_sub, depth_sub], 10,0.01)
         #self.ts = message_filters.TimeSynchronizer([image_sub, depth_sub], 10)
         #self.pose_pub = rospy.Publisher(self.pose_, mask)
-        self.camera_frame=rospy.get_param('~tf_camera_frame')
+        self.camera_frame=rospy.get_param('tf_camera_frame')
         self.ts.registerCallback(self.callback)
         self.depth_img=np.zeros((self.height,self.width))
         self.class_id_dict=class_id_dict
@@ -163,7 +156,7 @@ class ImageProcessor:
         transform_msg = TransformStamped()
         transform_msg.header.stamp = rospy.Time.now()  # Set the timestamp of the transform
         transform_msg.header.frame_id = camera_frame  # Set the parent frame ID
-        transform_msg.child_frame_id = f'object_frame_{i}'  # Set the child frame ID
+        transform_msg.child_frame_id = self.base_object_frame_name + f'_{i}'  # Set the child frame ID
         transform_msg.transform.translation.x = pred_t[0]  # Set the translation values (x, y, z)
         transform_msg.transform.translation.y = pred_t[1]
         transform_msg.transform.translation.z = pred_t[2]
@@ -208,11 +201,8 @@ class ImageProcessor:
                 #for all objects in the scene
                 for i in range(len(seg_ids)):
                     #if the detected objects belong to the classes of interest perform pose estimation
-                    
-                    selected_obj_class = self.class_id_dict[classes[i]]
-                    seg_id=seg_ids[i]
-                    mask_label = masks[i,:,:]
                 
+                    mask_label = masks[i,:,:]
                     mask_label=mask_label.reshape(mask_label.shape[0],mask_label.shape[1])
                     final_mask = mask_label * mask_depth
                 
@@ -307,11 +297,11 @@ class ImageProcessor:
                 result_img = self.bridge.cv2_to_imgmsg(cv_image,'bgr8')
           
             # Publish the result
-            result_img.header.frame_id="camera_color_optical_frame"
+            result_img.header.frame_id=self.camera_frame
             self.result_pub.publish(result_img)
             out_mask_msg.header.stamp=image_msg.header.stamp
             out_mask_msg.header.seq=image_msg.header.seq
-            out_mask_msg.header.frame_id="camera_color_optical_frame"
+            out_mask_msg.header.frame_id=self.camera_frame
             self.mask_pub.publish(out_mask_msg)
             
         except CvBridgeError as e:

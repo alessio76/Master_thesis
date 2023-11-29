@@ -1,105 +1,144 @@
+#include <ros/ros.h>
+#include <actionlib/server/simple_action_server.h>
+#include <pose_estimation/execute_trajectory.h>
+#include <pose_estimation/TrajectoryAction.h>
+#include <pose_estimation/color.h>
+#include <moveit_msgs/MoveItErrorCodes.h>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2/LinearMath/Vector3.h>
-#include <tf2/LinearMath/Transform.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
-
-#include "pose_estimation/plan_service.h"
-
-// The circle constant tau = 2*pi. One tau is one rotation in radians.
-
-template<typename V>
-geometry_msgs::Pose create_planning_goal(tf2::Vector3 position, V quaternion){
-
-geometry_msgs::Pose target_pose;
-target_pose.orientation.w = quaternion.w();
-target_pose.orientation.x = quaternion.x();
-target_pose.orientation.y = quaternion.y();
-target_pose.orientation.z = quaternion.z();
-target_pose.position.x = position.getX();
-target_pose.position.y = position.getY();
-target_pose.position.z = position.getZ();
-
-return target_pose;
 
 
+namespace uclv
+{
+
+  class TrajectoryAction{
+    protected:
+
+      ros::NodeHandle nh_;
+      actionlib::SimpleActionServer<pose_estimation::TrajectoryAction> as_; // NodeHandle instance must be created before this line. Otherwise strange error occurs.
+      // create messages that are used to published feedback/result
+      std::string action_name_;
+      pose_estimation::TrajectoryFeedback feedback_;
+      pose_estimation::TrajectoryResult result_;
+      ros::Publisher joint_pub;
+      bool success=true;
+      double rate=50;
+      float scale_factor=1.0;
+      std::string result_string;
+    bool simulation=false;
+
+
+    public:
+
+      TrajectoryAction(std::string topic_name, std::string name) :
+      as_(nh_, name, boost::bind(&TrajectoryAction::executeCB, this, _1), false),
+      action_name_(name)
+      {
+        joint_pub = nh_.advertise<sensor_msgs::JointState>(topic_name, 1);
+        nh_.getParam("simulation",this->simulation);
+        as_.start();
+      }
+
+      ~TrajectoryAction(void){
+      }
+
+      void execute_sim(const moveit_msgs::RobotTrajectory& trajectory){
+
+        
+
+      }
+
+      void execute_robot(const moveit_msgs::RobotTrajectory& trajectory){
+
+            // Create the joint state msg
+            sensor_msgs::JointState joint_cmd;
+            joint_cmd.position.resize(trajectory.joint_trajectory.points.at(0).positions.size());
+            joint_cmd.velocity.resize(trajectory.joint_trajectory.points.at(0).positions.size());
+            joint_cmd.name.resize(trajectory.joint_trajectory.points.at(0).positions.size());
+            joint_cmd.header = trajectory.joint_trajectory.header;
+            joint_cmd.name = trajectory.joint_trajectory.joint_names;
+            int num_joints=joint_cmd.name.size();
+
+            double t=0.0;
+            double tf=0.0;
+            Eigen::Matrix<double, 6, Eigen::Dynamic> coeff = Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, num_joints);
+            int num_points_traj = int(trajectory.joint_trajectory.points.size());
+              const double sleep_time = 1.0 / rate;
+
+            for (int j = 0; j < num_points_traj - 1; j++)
+            {
+                tf = interpolate_traj(trajectory, this->scale_factor, coeff, j);
+                
+                // Create a timer to publish the joint commands at the specified rate
+                
+                double t0 = ros::Time::now().toSec();
+                while (t <= tf)
+                {
+                    t = ros::Time::now().toSec() - t0;
+                    for (int i = 0; i < num_joints; i++)
+                    {
+                        joint_cmd.position.at(i) = quintic_q(t, coeff, i);
+                        joint_cmd.velocity.at(i) = 0.0; // quintic_qdot(t, coeff, i);
+                    }
+
+                    joint_pub.publish(joint_cmd);
+                    std::cout << "Publishing " << j+1 << "/" << num_points_traj << " " << t << "/" << tf << std::endl;
+
+                    // sleep for (1/rate) seconds
+                    ros::Duration(sleep_time).sleep();
+                    
+                }
+                t = 0.0;
+            }
+        }//wsg32.lab
+
+      void executeCB(const pose_estimation::TrajectoryGoalConstPtr &goal){
+
+        ROS_INFO_STREAM("Trajectory execution started!" << std::endl);
+
+        if (as_.isPreemptRequested()){
+            this->result_string = "Goal Preempted";
+            this->success=false;
+            as_.setPreempted(this->result_, this->result_string);
+        }
+        
+        else{
+          
+            if (uclv::askContinue("EXECUTION ON REAL ROBOT")){
+              this->execute_robot(goal->trajectory);
+
+              // Check if goal is done
+              if (ros::ok() && this->success==true){
+                this->result_string = "Trajectory execution finished successfully!";
+                as_.setSucceeded(this->result_,this->result_string);
+              }
+
+              else{
+                this->result_string = "Trajectory execution failed!";
+                as_.setAborted(this->result_, this->result_string);
+              }
+              
+            }
+
+            else{
+                this->result_string = "Aborted execution caused by user!";
+                this->success=false;
+                as_.setAborted(this->result_, this->result_string);
+            }
+            
+        }
+
+      ROS_INFO_STREAM(BOLDGREEN << this->result_string << RESET << std::endl);
+      
+      }
+
+    };
 }
-
-
-tf2::Transform link_t_goal_pose(tf2_ros::Buffer& tfBuffer,tf2::Vector3& base_to_goal_vec3,tf2::Quaternion& base_to_goal_quat ){
-
-tfBuffer.canTransform("grasp", "link_t", ros::Time::now(),ros::Duration(3));
-
-//gives the pose for the second frame in the first coordinate system 
-geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform("link_t", "ee_fingers", ros::Time(0));
-tf2::Quaternion link_t_to_grasp_quat(transformStamped.transform.rotation.x,
-                         transformStamped.transform.rotation.y,
-                         transformStamped.transform.rotation.z,
-                         transformStamped.transform.rotation.w);
-
-tf2::Vector3 link_t_to_grasp_vec3(transformStamped.transform.translation.x, transformStamped.transform.translation.y, transformStamped.transform.translation.z);
-tf2::Transform link_t_to_grasp(link_t_to_grasp_quat, link_t_to_grasp_vec3);
- 
-
-tf2::Transform base_to_goal(base_to_goal_quat, base_to_goal_vec3);
-
-tf2::Transform base_to_t=base_to_goal*link_t_to_grasp.inverse();
-return base_to_t;
-
-}
-
-
-bool plan_service(pose_estimation::plan_service::Request  &req, pose_estimation::plan_service::Response &res)
-{ 
-  
-  ROS_INFO_STREAM("Starting executin server");
-  //set the movegroups base don the name passed by the client
-  moveit::planning_interface::MoveGroupInterface move_group_interface(req.planning_group);
-  move_group_interface.setPlanningTime(10.0);
-  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-  
-  //transform the geometry message in tf2 to make calculations
-  geometry_msgs::Transform end_effector_desidered_pose(req.goal_transform);
-  tf2::Quaternion goal_quat(req.goal_transform.rotation.x, 
-                            req.goal_transform.rotation.y, 
-                            req.goal_transform.rotation.z, 
-                            req.goal_transform.rotation.w);
-  
-  tf2::Vector3 goal_pos(req.goal_transform.translation.x,
-                          req.goal_transform.translation.y,
-                          req.goal_transform.translation.z);
-
-  //transform an end-effector goal into a link_t goal since moveit planns as link_t were the end effector
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-
-  //goal pose for the link_t
-  tf2::Transform base_to_t=link_t_goal_pose(tfBuffer, goal_pos, goal_quat);
-  tf2::Quaternion base_to_t_quat=base_to_t.getRotation();
-  
-  //convert the tf2 structur einto a gemetry_msgs one sincmoveit wants the last one
-  geometry_msgs::Pose goal_pose=create_planning_goal(base_to_t.getOrigin(),base_to_t.getRotation());
-  move_group_interface.setPoseTarget(goal_pose);
-
-  bool success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-  res.success=success;
-  res.trajectory=my_plan.trajectory_.joint_trajectory;
-
-  return true;
-}
-
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "Planning_node");
-  ros::NodeHandle n;
-  
-  ros::ServiceServer service = n.advertiseService("plan_service", plan_service);
-  ROS_INFO("Planning service up");
-  ros::AsyncSpinner spinner(2); 
-  spinner.start();
-  while(ros::ok());
+  ros::init(argc, argv, "trajectory_action_server");
+  uclv::TrajectoryAction trajAction("/move_group/fake_controller_joint_states","trajectory_action_server");
+  ros::spin();
+
+  return 0;
 }

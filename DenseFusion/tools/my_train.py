@@ -38,22 +38,24 @@ parser.add_argument('--batch_size', type=int, default = 32, help='batch size')
 parser.add_argument('--workers', type=int, default = 10, help='number of data loading workers')
 parser.add_argument('--lr', type=float ,default=0.0001, help='learning rate')
 parser.add_argument('--lr_rate', default=0.3, help='learning rate decay rate')
-parser.add_argument('--w', default=0.015, help='learning rate')
+parser.add_argument('--w', default=0.013, help='learning rate')
 parser.add_argument('--w_rate', default=0.3, help='learning rate decay rate')
 parser.add_argument('--decay_margin', default=0.016, help='margin to decay lr & w')
-parser.add_argument('--refine_margin', default=0.013, help='margin to start the training of iterative refinement')
+parser.add_argument('--refine_margin', default=0.009, help='margin to start the training of iterative refinement')
 parser.add_argument('--noise_trans', default=0.03, help='range of the random noise of translation added to the training data')
 parser.add_argument('--iteration', type=int, default = 2, help='number of refinement iterations')
 parser.add_argument('--nepoch', type=int, default=50, help='max number of epochs to train')
-parser.add_argument('--resume_posenet', type=str, default = 'pose_model_10_0.02788430684283241.pth',  help='resume PoseNet model')
+parser.add_argument('--resume_posenet', type=str, default = '',  help='resume PoseNet model')
 parser.add_argument('--resume_refinenet', type=str, default = '',  help='resume PoseRefineNet model')
 parser.add_argument('--start_epoch', type=int, default = 1, help='which epoch to start')
 parser.add_argument('--refine_start', type=bool, default = False, help='If True starts the training of the refine model')
 parser.add_argument('--max_imgs_train', type=int, default=None,help='If not None sets a maximun to the number of images used for training')
 parser.add_argument('--max_imgs_test', type=int, default=None,help='If not None sets a maximun to the number of images used for testing')
-parser.add_argument('--max_failure', type=int, default=5,help='max iteration where the val precision does not increase')
+parser.add_argument('--max_failure', type=int, default=10,help='max iteration where the val precision does not increase')
 
 opt = parser.parse_args()
+
+
 
 def freeze_layers(model,layers_to_freeze):
     for name in layers_to_freeze:
@@ -97,18 +99,39 @@ def main():
     refiner = PoseRefineNet(num_points = opt.num_points, num_obj = opt.num_objects)
     refiner.cuda()
     
+    """
+    state_dict = torch.load('{0}/{1}'.format(opt.weigth_dir, opt.resume_refinnet))
+    new_state_dict = {}
+    for k in state_dict.keys():
+       
+        if "conv4" not in k:
+            new_state_dict[k] = state_dict[k] 
+        else:
+            dim_list=list(state_dict[k].size())
+            dim_list[0]=dim_list[0]//21
+            new_state_dict[k] = torch.nn.init.uniform_(torch.empty(dim_list))
+
+    estimator.load_state_dict(new_state_dict)
+    """
+
     if opt.resume_posenet != '':
-        estimator.load_state_dict(torch.load('{0}/{1}'.format(opt.outf, opt.resume_posenet)))
+        estimator.load_state_dict(torch.load('{0}/{1}'.format( opt.outf, opt.resume_posenet)))
 
     if opt.resume_refinenet != '' or opt.refine_start:
         if opt.resume_refinenet:
-            refiner.load_state_dict(torch.load('{0}/{1}'.format(opt.outf, opt.resume_refinenet)))
+            refiner.load_state_dict(torch.load('{0}/{1}'.format( opt.outf, opt.resume_refinenet)))
         opt.refine_start = True
         opt.decay_start = True
         opt.lr *= opt.lr_rate
         opt.w *= opt.w_rate
         opt.batch_size = int(opt.batch_size / opt.iteration)
-        optimizer = optim.Adam(refiner.parameters(), lr=opt.lr)
+        optimizer = optim.Adam(refiner.parameters(), lr=float(opt.lr))
+
+        estimator = PoseNet(num_points = opt.num_points, num_obj = opt.num_objects)
+        estimator.cuda()
+        refiner = PoseRefineNet(num_points = opt.num_points, num_obj = opt.num_objects)
+        refiner.cuda()
+
        
     else:
         opt.refine_start = False
@@ -141,7 +164,7 @@ def main():
     criterion_refine = Loss_refine(opt.num_points_mesh, opt.sym_list)
     best_test = np.Inf
 
-    if opt.start_epoch == 1:
+    if opt.start_epoch == 1 and  os.path.exists(os.path.join(opt.log_dir, opt.log_file_train)):
         os.remove(os.path.join(opt.log_dir, opt.log_file_train))
 
     tensor_dir = os.path.join(opt.log_dir,'santal_session')
@@ -182,16 +205,20 @@ def main():
         layer=getattr(refiner,'conv%d_r' % i)
         nn.init.xavier_uniform_(layer.weight)
         layer=getattr(refiner,'conv%d_t' % i)
-        nn.init.xavier_uniform_(layer.weight)"""
+        nn.init.xavier_uniform_(layer.weight)
     
-    num_params = sum(p.numel() for p in estimator.parameters() if p.requires_grad)
-    num_params += sum(p.numel() for p in refiner.parameters() if p.requires_grad)
-    print(f"Number of trainable parameters: {num_params/1e6}M")
+    for name, param in estimator.named_parameters():
+        if '4_r' not in name and '4_t' not in name and "4_c" not in name and '3_r' not in name and '3_t' not in name and "3_c" not in name: # and '2_r' not in name and '2_t' not in name and "2_c" not in name and '1_r' not in name and '1_t' not in name and "1_c" not in name:
+            param.requires_grad = False"""
+
+    num_params_estimator = sum(p.numel() for p in estimator.parameters() if p.requires_grad)
+    num_params_refiner= sum(p.numel() for p in refiner.parameters() if p.requires_grad)
+    print(f"Number of trainable parameters: estimaator: {num_params_estimator/1e6}M, refiner: {num_params_refiner/1e6}M")
     log_file=open(os.path.join(opt.log_dir,opt.log_file_train),'a')
   
     print("epoch",opt.nepoch,'learning rate',opt.lr,'batch size',opt.batch_size,'estimated iterations',extimated_iterations,
           os.path.join(opt.log_dir,opt.log_file_train),os.path.join(opt.log_dir,opt.log_file_test))
-    input("Start training?")
+    #input("Start training?")
     st_time = time.time()
     train_iteration=0
     validation_errors=0
@@ -199,11 +226,15 @@ def main():
     
     try:
         for epoch in range(opt.start_epoch, opt.nepoch+opt.start_epoch):
-            if validation_errors>=opt.max_failure:
+            if validation_errors>=opt.max_failure and opt.refine_start != True:
+                torch.save(estimator.state_dict(), '{0}/pose_model_current_no_ref.pth'.format(opt.outf))
+                opt.refine_start=True
+            elif validation_errors>=opt.max_failure and opt.refine_start == True:
                 torch.save(estimator.state_dict(), '{0}/pose_model_current.pth'.format(opt.outf))
-                if opt.refine_start:
-                        torch.save(refiner.state_dict(), '{0}/pose_refine_model_current.pth'.format(opt.outf))
-                break
+                torch.save(refiner.state_dict(), '{0}/pose_refine_model_current.pth'.format(opt.outf))
+                log_file.close()
+                exit()
+                
 
             #logger = setup_logger('epoch%d' % epoch, os.path.join(opt.log_dir, 'epoch_%d_log.txt' % epoch))
             print('Train time {0}'.format(time.strftime("%Hh %Mm %Ss", time.gmtime(time.time() - st_time)) + ', ' + 'Training started'))
@@ -211,6 +242,7 @@ def main():
             train_count = 0
             train_loss_avg = 0.0
             train_dis_avg = 0.0
+           
             #set the refiner network in train mode and the main network in evaluation 
             if opt.refine_start:
                 estimator.eval()
@@ -240,9 +272,11 @@ def main():
                     #we sum the losses and dist on every objects 
                     dis_per_image=0
                     loss_per_image=0
+                   
                     
                     for h in range(n_obj_img):
                         points, choose, img, target, model_points, idx=points_list[h], choose_list[h], img_list[h], target_list[h], model_points_list[h], idx_list[h]
+                       
                         points, choose, img, target, model_points, idx = Variable(points).cuda(), \
                                                                         Variable(choose).cuda(), \
                                                                         Variable(img).cuda(), \
@@ -250,6 +284,9 @@ def main():
                                                                         Variable(model_points).cuda(), \
                                                                         Variable(idx).cuda()
                         #make predictions on one object
+                        #points = point cloud from the image
+                        #img = image masked
+                        #choose = indices of the points to choose
                         pred_r, pred_t, pred_c, emb = estimator(img, points, choose, idx)
                         #calculate loss for that object
                         loss, dis, new_points, new_target = criterion(pred_r, pred_t, pred_c, target, model_points, idx, points, opt.w, opt.refine_start)
@@ -279,7 +316,7 @@ def main():
                         dis_per_image += dis.item()
                         #sum of all losses of every object from their ground truth point cloud
                         loss_per_image += loss.item()
-                        
+                    
                     
                         
                     #compute the dis on one image as the mean dis on every object in the image, cumulative per batch
@@ -287,6 +324,8 @@ def main():
                     
                     #compute the loss on one image as the mean dis on every object in the image, cumulative per batch
                     train_loss_avg += loss_per_image/n_obj_img
+
+                    
 
                     #train count is incremented every image but zeroed every epoch 
                     train_count += 1
@@ -310,11 +349,12 @@ def main():
                             new_mean=(old_mean*(train_iteration-1)+elapsed)/train_iteration
 
                         eta_str = str(datetime.timedelta(seconds=(extimated_iterations-train_iteration) * new_mean)).split('.')[0]
-                        print('Train time {0} Epoch {1} Batch {2} Frame {3} Iteration {4} Avg_dis (m):{5} Avg_loss:{6} ETA:{7} Refine:{8}, validation_errors {9}'.format(time.strftime("%Hh %Mm %Ss", 
-                                                                                                                                        time.gmtime(time.time() - st_time)), epoch, 
-                                                                                                                                        int(train_count / opt.batch_size), 
+                        pred_c = pred_c.view(1, 1000)
+                        how_max, which_max = torch.max(pred_c, 1)
+                        print('Train time {0} Epoch {1} Frame {2} pred_c {3} Avg_dis (m):{4} Avg_loss:{5} ETA:{6} Refine:{7}, validation_errors {8}'.format(time.strftime("%Hh %Mm %Ss", 
+                                                                                                                                        time.gmtime(time.time() - st_time)), epoch,  
                                                                                                                                         train_count, 
-                                                                                                                                        train_iteration,
+                                                                                                                                        how_max.item(),
                                                                                                                                         train_dis_avg / opt.batch_size,
                                                                                                                                         train_loss_avg / opt.batch_size,
                                                                                                                                         eta_str,
@@ -335,6 +375,7 @@ def main():
                         log_file.write(json.dumps(data_dict)+'\n')
                         train_dis_avg = 0.0
                         train_loss_avg = 0.0
+                       
                         
 
                     if train_count != 0 and train_count % 1000 == 0:

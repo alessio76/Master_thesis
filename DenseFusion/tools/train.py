@@ -96,7 +96,7 @@ def main():
     else:
         opt.refine_start = False
         opt.decay_start = False
-        optimizer = optim.Adam(estimator.parameters(), lr=opt.lr)
+        optimizer = optim.Adam(estimator.parameters(), lr=float(opt.lr))
 
     if opt.dataset == 'ycb':
         dataset = PoseDataset_ycb('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)

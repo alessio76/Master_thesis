@@ -254,13 +254,13 @@ def depth_image_from_distance_image(distance, fx,fy,cx,cy):
     
 #dense fusion args
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', type=str, default = 'trained_models/santal_dataset/pose_model_7_0.05715361642802047.pth',  help='resume PoseNet model')
+parser.add_argument('--model', type=str, default = 'trained_models/santal_dataset/pose_model_31_0.02415213751335093.pth',  help='resume PoseNet model')
 parser.add_argument('--refine_model', type=str, default = '',  help='resume PoseRefineNet model')
 
 # yolact args
 parser.add_argument('--trained_model',default='/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_55_290000_mAP_8_89.pth', type=str,
                     help='Trained state_dict file path to open. If "interrupt", this will open the interrupt file.')
-parser.add_argument('--top_k', default=5, type=int,
+parser.add_argument('--top_k', default=1, type=int,
                         help='Further restrict the number of predictions to parse')
 parser.add_argument('--cuda', default=True, type=str2bool,
                     help='Use cuda to evaulate model')
@@ -315,8 +315,8 @@ norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225
 border_list = [-1, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640, 680]
 xmap = np.array([[j for i in range(640)] for j in range(480)])
 ymap = np.array([[i for i in range(640)] for j in range(480)])
-cam_cx = 317.7075500488281
-cam_cy = 238.1421356201172
+cam_cx = 320
+cam_cy = 240
 cam_fx = 610.59326171875
 cam_fy = 610.605712890625
 
@@ -421,8 +421,8 @@ depth[depth<-100]=0
 depth[depth>3]=0
 depth=depth_image_from_distance_image(depth,cam_fx,cam_fy,cam_cx,cam_cy)
 
-
-"""cv2.namedWindow("depth",cv2.WINDOW_AUTOSIZE)
+"""
+cv2.namedWindow("depth",cv2.WINDOW_AUTOSIZE)
 cv2.imshow("depth",depth)
 cv2.waitKey()
 
@@ -493,7 +493,7 @@ with torch.no_grad():
         pt1 = (xmap_masked - cam_cy) * pt2 / cam_fy
         cloud_numpy = np.concatenate((pt0, pt1, pt2), axis=1)
         cloud=cloud_numpy
-        """
+        
         fig= plt.figure()
         ax = fig.add_subplot(projection='3d')
         img_plt = ax.scatter(cloud[:,0], cloud[:,1], cloud[:,2])
@@ -503,7 +503,7 @@ with torch.no_grad():
         ax.set_zlabel('Z')
 
         plt.show()
-        """
+        
         cloud = torch.from_numpy(cloud.astype(np.float32))
         choose = torch.LongTensor(choose.astype(np.int32))
         img_masked = norm(torch.from_numpy(img_masked.astype(np.float32)))
