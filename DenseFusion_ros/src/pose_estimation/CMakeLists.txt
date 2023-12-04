@@ -71,6 +71,7 @@ add_message_files(
  add_service_files(
    FILES
    plan_service.srv
+   pre_grasp_service.srv
 
  )
 
@@ -159,6 +160,7 @@ include_directories(
  add_executable(plan_node src/plan_service.cpp)
  add_executable(main_node src/main_node.cpp)
  add_executable(trajectory_action_server src/trajectory_action_server.cpp)
+ add_executable(pre_grasp_selection_node src/pre_grasp_selection_server.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -175,6 +177,7 @@ include_directories(
  target_link_libraries(plan_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
+ target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##

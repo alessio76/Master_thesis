@@ -1,0 +1,5 @@
+geometry_msgs/TransformStamped object_pose
+string planning_group
+---
+geometry_msgs/TransformStamped pre_grasp_pose
+bool success
