@@ -1,5 +1,6 @@
 geometry_msgs/TransformStamped goal_transform
 string planning_group
+string planning_space
 ---
 moveit_msgs/RobotTrajectory trajectory
 bool success

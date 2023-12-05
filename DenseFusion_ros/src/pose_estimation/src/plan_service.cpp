@@ -8,6 +8,18 @@
 
 // The circle constant tau = 2*pi. One tau is one rotation in radians.
 namespace uclv{
+   bool cartesian_path_planner(moveit_msgs::RobotTrajectory &trajectory, std::vector<geometry_msgs::Pose> &target_poses, moveit::planning_interface::MoveGroupInterface& move_group){
+
+    const double jump_threshold = 0.0;
+    const double eef_step = 0.01;
+    double fraction = move_group.computeCartesianPath(target_poses, eef_step, jump_threshold, trajectory);
+    if (fraction == 1){
+        return true;
+    }
+    else{
+        return false;
+    }
+  }
 
   bool plan_service(pose_estimation::plan_service::Request  &req, pose_estimation::plan_service::Response &res){ 
     
@@ -16,7 +28,9 @@ namespace uclv{
     moveit::planning_interface::MoveGroupInterface move_group_interface(req.planning_group);
     move_group_interface.setPlanningTime(5.0);
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-   
+    moveit_msgs::RobotTrajectory trajectory;
+    bool success;
+
     Eigen::Quaternionf goal_quat(req.goal_transform.transform.rotation.w, 
                               req.goal_transform.transform.rotation.x, 
                               req.goal_transform.transform.rotation.y, 
@@ -34,14 +48,25 @@ namespace uclv{
     //goal pose for the link_t
     Eigen::Isometry3f base_to_t = link_t_goal_pose(tfBuffer, goal_pos, goal_quat);
     Eigen::Quaternionf base_to_t_quat = Eigen::Quaternionf(base_to_t.rotation());
-    
-    //convert the tf2 structur einto a gemetry_msgs one sincmoveit wants the last one
     geometry_msgs::Pose goal_pose = eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation()));
-    move_group_interface.setPoseTarget(goal_pose);
 
-    bool success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+    if(req.planning_space == "joint"){
+    //convert the tf2 structur einto a gemetry_msgs one sincmoveit wants the last one
+    
+    move_group_interface.setPoseTarget(goal_pose);
+    success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+    trajectory=my_plan.trajectory_;
+    }
+
+    else if(req.planning_space == "cartesian"){
+        std::vector<geometry_msgs::Pose> target_poses;
+        target_poses.push_back(goal_pose);
+        success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
+    }
+
+    
     res.success=success;
-    res.trajectory=my_plan.trajectory_;
+    res.trajectory=trajectory;
     
     return true;
   }

@@ -146,16 +146,22 @@ int main(int argc, char** argv){
             pre_grasp_pose = Eigen::Isometry3f(pre_grasp_trans * pre_grasp_rot);
             post_grasp_pose = pre_grasp_pose;
             grasp_pose = uclv::set_grasp_pose(pre_grasp_pose, pre_grasp_offset);
-            std::array<Eigen::Isometry3f, 3> task_poses{pre_grasp_pose, grasp_pose, post_grasp_pose};
-            //std::array<Eigen::Isometry3f, 3> task_poses{Eigen::Isometry3f(Eigen::Translation3f(0,0,0.1)) * test,test, (Eigen::Translation3f(0,0,0.1) * test)}; 
+            std::array<std::tuple<std::string, Eigen::Isometry3f>, 3> task_poses{
+                                                                std::make_tuple("joint", pre_grasp_pose),
+                                                                std::make_tuple("cartesian", grasp_pose),
+                                                                std::make_tuple("cartesian", post_grasp_pose)
+                                                                };
+            
             std::ostringstream out;
             
-            for(int i=0; i<3; i++){
-             
+            for(int i=0; i<task_poses.size(); i++){
+                Eigen::Vector3f trans = std::get<1>(task_poses[i]).translation();
+                Eigen::Quaternionf quat = Eigen::Quaternionf(std::get<1>(task_poses[i]).rotation());
                 //transform to be published on tf for visualization
-                geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", task_poses[i].translation(), Eigen::Quaternionf(task_poses[i].rotation()));
+                geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", trans, quat);
                 static_broadcaster.sendTransform(goal_pose);
                 plan_service.request.goal_transform = goal_pose;
+                plan_service.request.planning_space = std::get<0>(task_poses[i]);
                 plan_service.request.planning_group = ARM;
 
                 if (plan_client.call(plan_service)){   

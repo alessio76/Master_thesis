@@ -102,7 +102,7 @@ pose_estimation::pre_grasp_service::Response best_hit(bool debug, moveit::planni
             float ang_dist = Eigen::AngleAxisf(end_effector_quat.toRotationMatrix().transpose() * pre_grasp.rotation()).angle();
           
             scored_pregrasp[dist+ang_dist/10.0] = pre_grasp;
-            ROS_INFO_STREAM(dist+ang_dist/10.0);
+           
             if(debug)
                 visualize_frames(static_broadcaster, out, pre_grasp, i, j);
 
@@ -110,7 +110,6 @@ pose_estimation::pre_grasp_service::Response best_hit(bool debug, moveit::planni
     }
 
     auto it = scored_pregrasp.begin();
-    
     while (it != scored_pregrasp.end() && !success) {
         
         Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, it->second.translation(), Eigen::Quaternionf(it->second.rotation()));
@@ -120,7 +119,7 @@ pose_estimation::pre_grasp_service::Response best_hit(bool debug, moveit::planni
         success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
         
         if(success) 
-            pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", out.str(), it->second.translation(), Eigen::Quaternionf(it->second.rotation()));
+            pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", it->second.translation(), Eigen::Quaternionf(it->second.rotation()));
         
         ++it;
     }
