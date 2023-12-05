@@ -42,9 +42,9 @@ namespace uclv{
         santal_pose.orientation.y = rand_quat.y();
         santal_pose.orientation.x = rand_quat.x();*/
 
-        santal_pose.position.x = 0.3;
-        /*santal_pose.position.y = 0.2;
-        santal_pose.position.z = 0.0;*/
+        santal_pose.position.x = 0.8;
+        //santal_pose.position.y = 0.2;
+        santal_pose.position.z = 0.6;
         
 
         Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);

@@ -11,39 +11,13 @@
 float pre_grasp_offset;
 // The circle constant tau = 2*pi. One tau is one rotation in radians.
 namespace uclv{
-  
-  pose_estimation::pre_grasp_service::Response pre_grasp_strategy(const Eigen::Isometry3f& obj_pose_world_frame, const std::string& planning_group){
-    moveit::planning_interface::MoveGroupInterface move_group_interface(planning_group);
-    move_group_interface.setPlanningTime(0.1);
-    bool debug=true;
 
-    pose_estimation::pre_grasp_service::Response res;
+  bool pre_grasp_service(pose_estimation::pre_grasp_service::Request& req, pose_estimation::pre_grasp_service::Response& res){
 
-    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-    bool success = false;
-        
-    geometry_msgs::TransformStamped pre_grasp_pose;
-
-    res = uclv::first_hit(debug, move_group_interface, obj_pose_world_frame, pre_grasp_offset);
-
-    /*for(int i=0; i < n_base_frames;i++){
-        for(int j=0; j < n_gripper_rotations;j++){
-            //transform the candidate pose to base frame
-            Eigen::Isometry3f pre_grasp = obj_pose_world_frame * pre_grasp_base_poses_obj_frame[i] * Eigen::AngleAxisf((M_PI*j)/2, Eigen::Vector3f::UnitZ());
-            pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", out.str(),  pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));
-            //static_broadcaster.sendTransform(goal_pose);
-        }
-      
-    }*/
-
-    return res;
-  }
-
-
-  bool pre_grasp_service(pose_estimation::pre_grasp_service::Request& req, pose_estimation::pre_grasp_service::Response& res)
-  { 
-    
     ROS_INFO_STREAM("Starting executing pre_grasp callback");
+    moveit::planning_interface::MoveGroupInterface move_group_interface(req.planning_group);
+    move_group_interface.setPlanningTime(0.1);
+    bool debug=false;
     
     Eigen::Quaternionf obj_quat( req.object_pose.transform.rotation.w, 
                                  req.object_pose.transform.rotation.x, 
@@ -54,9 +28,7 @@ namespace uclv{
                              req.object_pose.transform.translation.y,
                              req.object_pose.transform.translation.z);
 
-    pose_estimation::pre_grasp_service::Response calculated_res = pre_grasp_strategy(Eigen::Isometry3f(Eigen::Translation3f(obj_pos) * obj_quat), req.planning_group);
-    res.success = calculated_res.success;
-    res.pre_grasp_pose = calculated_res.pre_grasp_pose;
+    res = uclv::best_hit(debug, move_group_interface, Eigen::Isometry3f(Eigen::Translation3f(obj_pos) * obj_quat), pre_grasp_offset);
 
   
     return true;
