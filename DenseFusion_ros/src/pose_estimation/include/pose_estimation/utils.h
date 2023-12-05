@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include "sensor_msgs/JointState.h"
 #include <moveit_msgs/RobotTrajectory.h>
 #include <eigen3/Eigen/Geometry>
@@ -170,3 +173,4 @@ namespace uclv{
 
     
 }
+#endif

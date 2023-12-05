@@ -4,10 +4,13 @@
 	<arg name="simulation_arg" default="true" />
 	<arg name="trajectory_action_name_arg" default="/trajectory_action_server" />
 	<arg name="end_effector_frame_arg" default="ee_fingers" />
+	<arg name="pre_grasp_offset_arg" default="0.15"/>
 
 	<param name="simulation" value="$(arg simulation_arg)" type="bool"/>
 	<param name="trajectory_action_name" value="$(arg trajectory_action_name_arg)" type="string"/>
 	<param name="end_effector_frame_name" value="$(arg end_effector_frame_arg)" type="string"/>
+	<param name="pre_grasp_offset_name" value="$(arg pre_grasp_offset_arg)"/>
+	
 	
 	<include file="$(find yaskawa_moveit_config)/launch/demo.launch"/>
 

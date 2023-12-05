@@ -35,8 +35,17 @@ namespace uclv{
         object_to_attach.header.frame_id = "base_link";
     
         geometry_msgs::Pose santal_pose;
+        Eigen::Quaternionf rand_quat=Eigen::Quaternionf::UnitRandom();
         santal_pose.orientation.w = 1.0;
-        santal_pose.position.x = 0.4;
+        /*santal_pose.orientation.w = rand_quat.w();
+        santal_pose.orientation.z = rand_quat.z();
+        santal_pose.orientation.y = rand_quat.y();
+        santal_pose.orientation.x = rand_quat.x();*/
+
+        santal_pose.position.x = 0.3;
+        /*santal_pose.position.y = 0.2;
+        santal_pose.position.z = 0.0;*/
+        
 
         Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);
         Eigen::Quaternionf santal_ori(santal_pose.orientation.w, santal_pose.orientation.x, santal_pose.orientation.y, santal_pose.orientation.z);
@@ -51,9 +60,9 @@ namespace uclv{
         
     }
 
-    Eigen::Isometry3f set_grasp_pose(const Eigen::Isometry3f& pre_grasp_pose){
+    Eigen::Isometry3f set_grasp_pose(const Eigen::Isometry3f& pre_grasp_pose, float pre_grasp_offset){
         
-        Eigen::Isometry3f pre_grasp_to_grasp = Eigen::Isometry3f(Eigen::Translation3f(Eigen::Vector3f::UnitZ() * 0.15));
+        Eigen::Isometry3f pre_grasp_to_grasp = Eigen::Isometry3f(Eigen::Translation3f(Eigen::Vector3f::UnitZ() * pre_grasp_offset));
                                                                
 
         Eigen::Isometry3f grasp_pose = pre_grasp_pose * pre_grasp_to_grasp;
@@ -73,7 +82,9 @@ int main(int argc, char** argv){
     pose_estimation::pre_grasp_service pre_grasp_service;
     actionlib::SimpleActionClient<pose_estimation::TrajectoryAction> action_client("trajectory_action_server",true);
     std::string end_effector_frame;
+    float pre_grasp_offset;
     n.getParam("end_effector_frame_name", end_effector_frame);
+    n.getParam("pre_grasp_offset_name", pre_grasp_offset);
     //wait for the planning service to be up
     pre_grasp_client.waitForExistence();
 
@@ -105,7 +116,7 @@ int main(int argc, char** argv){
     }
     //54mm most long side
     //upright 35mm
-    //10mm shortest side
+    //12mm shortest side
     //otherwise use the real goal pose
     else{
         
@@ -134,7 +145,7 @@ int main(int argc, char** argv){
                                             
             pre_grasp_pose = Eigen::Isometry3f(pre_grasp_trans * pre_grasp_rot);
             post_grasp_pose = pre_grasp_pose;
-            grasp_pose = uclv::set_grasp_pose(pre_grasp_pose);
+            grasp_pose = uclv::set_grasp_pose(pre_grasp_pose, pre_grasp_offset);
             std::array<Eigen::Isometry3f, 3> task_poses{pre_grasp_pose, grasp_pose, post_grasp_pose};
             //std::array<Eigen::Isometry3f, 3> task_poses{Eigen::Isometry3f(Eigen::Translation3f(0,0,0.1)) * test,test, (Eigen::Translation3f(0,0,0.1) * test)}; 
             std::ostringstream out;

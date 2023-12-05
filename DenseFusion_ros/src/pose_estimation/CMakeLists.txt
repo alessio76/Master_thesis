@@ -120,8 +120,8 @@ add_message_files(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES pose_estimation
+  INCLUDE_DIRS include
+  LIBRARIES pose_estimation
 CATKIN_DEPENDS rospy message_runtime  moveit_core
     moveit_visual_tools
     moveit_ros_planning_interface
@@ -129,6 +129,7 @@ CATKIN_DEPENDS rospy message_runtime  moveit_core
     tf2_geometry_msgs
     actionlib_msgs
   DEPENDS roscpp  EIGEN3
+  
 )
 
 ###########
@@ -144,14 +145,12 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/pose_estimation.cpp
-# )
+ add_library(grasp_policies src/grasp_policies.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(grasp_policies ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -177,7 +176,7 @@ include_directories(
  target_link_libraries(plan_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
- target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES})
+ target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES} grasp_policies)
 
 #############
 ## Install ##

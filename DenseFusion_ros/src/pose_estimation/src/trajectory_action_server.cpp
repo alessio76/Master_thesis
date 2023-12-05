@@ -24,7 +24,7 @@ namespace uclv
       double rate=50;
       float scale_factor=1.0;
       std::string result_string;
-    bool simulation=false;
+      bool simulation=false;
 
 
     public:
