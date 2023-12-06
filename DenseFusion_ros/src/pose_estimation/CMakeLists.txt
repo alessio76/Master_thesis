@@ -145,7 +145,7 @@ include_directories(
 )
 
 ## Declare a C++ library
- add_library(grasp_policies src/grasp_policies.cpp)
+ add_library(pre_grasp_policies src/pre_grasp_policies.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -176,7 +176,7 @@ include_directories(
  target_link_libraries(plan_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
- target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES} grasp_policies)
+ target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES} pre_grasp_policies)
 
 #############
 ## Install ##

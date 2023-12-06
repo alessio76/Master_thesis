@@ -1,5 +1,5 @@
-#ifndef GRASP_H
-#define GRASP_H
+#ifndef PRE_GRASP_H
+#define PRE_GRASP_H
 
 #include "pose_estimation/pre_grasp_service.h"
 #include "pose_estimation/utils.h"
@@ -66,11 +66,5 @@ class PreGraspBasePoses{
     }
 
 };
-
-pose_estimation::pre_grasp_service::Response first_hit(bool debug, moveit::planning_interface::MoveGroupInterface& move_group_interface, const Eigen::Isometry3f& obj_pose_world_frame, float pre_grasp_offset);
-
-pose_estimation::pre_grasp_service::Response best_hit(bool debug, moveit::planning_interface::MoveGroupInterface& move_group_interface, const Eigen::Isometry3f& obj_pose_world_frame, float pre_grasp_offset);
-
 }
-
 #endif

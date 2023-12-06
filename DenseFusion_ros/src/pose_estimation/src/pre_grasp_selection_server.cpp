@@ -5,7 +5,7 @@
 #include <geometry_msgs/TransformStamped.h>
 
 #include <pose_estimation/utils.h>
-#include <pose_estimation/grasp_policies.h>
+#include "pose_estimation/pre_grasp_policies.h"
 #include "pose_estimation/pre_grasp_service.h"
 
 float pre_grasp_offset;
@@ -15,9 +15,9 @@ namespace uclv{
   bool pre_grasp_service(pose_estimation::pre_grasp_service::Request& req, pose_estimation::pre_grasp_service::Response& res){
 
     ROS_INFO_STREAM("Starting executing pre_grasp callback");
-    moveit::planning_interface::MoveGroupInterface move_group_interface(req.planning_group);
-    move_group_interface.setPlanningTime(0.1);
+    
     bool debug=false;
+    uclv::PreGraspPolicies grasp_function_selector(pre_grasp_offset, req.planning_group, debug);
     
     Eigen::Quaternionf obj_quat( req.object_pose.transform.rotation.w, 
                                  req.object_pose.transform.rotation.x, 
@@ -28,7 +28,7 @@ namespace uclv{
                              req.object_pose.transform.translation.y,
                              req.object_pose.transform.translation.z);
 
-    res = uclv::best_hit(debug, move_group_interface, Eigen::Isometry3f(Eigen::Translation3f(obj_pos) * obj_quat), pre_grasp_offset);
+    res = grasp_function_selector.best_hit(Eigen::Isometry3f(Eigen::Translation3f(obj_pos) * obj_quat));
 
   
     return true;
