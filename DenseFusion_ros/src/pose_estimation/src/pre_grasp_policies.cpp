@@ -63,7 +63,7 @@ namespace uclv{
 
         out_res.pre_grasp_pose = pre_grasp_pose;
         out_res.success = success;
-
+        out_res.trajectory = my_plan.trajectory_;
     
         static_broadcaster.sendTransform(pre_grasp_pose);
         
@@ -126,6 +126,7 @@ namespace uclv{
             ++it;
         }
 
+        out_res.trajectory = my_plan.trajectory_;
         out_res.pre_grasp_pose = pre_grasp_pose;
         out_res.success = success;
         static_broadcaster.sendTransform(pre_grasp_pose);

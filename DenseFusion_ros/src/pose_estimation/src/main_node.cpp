@@ -10,8 +10,8 @@
 #include <actionlib/client/simple_action_client.h>
 #include <Eigen/Geometry>
 
-
-#include <pose_estimation/utils.h>
+#include "pose_estimation/color.h"
+#include "pose_estimation/utils.h"
 #include "pose_estimation/TrajectoryAction.h"
 #include "pose_estimation/plan_service.h"
 #include "pose_estimation/pre_grasp_service.h"
@@ -83,8 +83,10 @@ int main(int argc, char** argv){
     actionlib::SimpleActionClient<pose_estimation::TrajectoryAction> action_client("trajectory_action_server",true);
     std::string end_effector_frame;
     float pre_grasp_offset;
+    
     n.getParam("end_effector_frame_name", end_effector_frame);
     n.getParam("pre_grasp_offset_name", pre_grasp_offset);
+    std::vector<moveit_msgs::RobotTrajectory> full_traj;
     //wait for the planning service to be up
     pre_grasp_client.waitForExistence();
 
@@ -117,6 +119,7 @@ int main(int argc, char** argv){
     //54mm most long side
     //upright 35mm
     //12mm shortest side
+    //192.168.2.111 wsg IP 
     //otherwise use the real goal pose
     else{
         
@@ -128,12 +131,16 @@ int main(int argc, char** argv){
 
     pre_grasp_service.request.object_pose = uclv::eigen_to_TransformedStamped("base_link", "obj_pose", obj_pose.translation(), Eigen::Quaternionf(obj_pose.rotation()));
     pre_grasp_service.request.planning_group = ARM;
-
+   
     if (pre_grasp_client.call(pre_grasp_service)){   
         ROS_INFO_STREAM("Calling pre_grasp server");
 
+        //if a feasible pre_grasp pose is found, add it to the trajectory vector
         if(pre_grasp_service.response.success){
-            // Set pre-grasp, grasp and post-grasp poses
+            ROS_INFO_STREAM("Pre grasp sucess");
+
+            full_traj.push_back(pre_grasp_service.response.trajectory);
+
             Eigen::Translation3f pre_grasp_trans(pre_grasp_service.response.pre_grasp_pose.transform.translation.x,
                                                 pre_grasp_service.response.pre_grasp_pose.transform.translation.y,
                                                 pre_grasp_service.response.pre_grasp_pose.transform.translation.z);
@@ -147,14 +154,16 @@ int main(int argc, char** argv){
             post_grasp_pose = pre_grasp_pose;
             grasp_pose = uclv::set_grasp_pose(pre_grasp_pose, pre_grasp_offset);
             std::array<std::tuple<std::string, Eigen::Isometry3f>, 3> task_poses{
-                                                                std::make_tuple("joint", pre_grasp_pose),
+                                                                std::make_tuple("cartesian", pre_grasp_pose),
                                                                 std::make_tuple("cartesian", grasp_pose),
                                                                 std::make_tuple("cartesian", post_grasp_pose)
                                                                 };
             
             std::ostringstream out;
-            
-            for(int i=0; i<task_poses.size(); i++){
+            uclv::askContinue("Continue planning?");
+            //first element of task pose is the pregrasp pose, for which the plan has already been made
+            for(int i=1; i<task_poses.size(); i++){
+        
                 Eigen::Vector3f trans = std::get<1>(task_poses[i]).translation();
                 Eigen::Quaternionf quat = Eigen::Quaternionf(std::get<1>(task_poses[i]).rotation());
                 //transform to be published on tf for visualization
@@ -163,39 +172,16 @@ int main(int argc, char** argv){
                 plan_service.request.goal_transform = goal_pose;
                 plan_service.request.planning_space = std::get<0>(task_poses[i]);
                 plan_service.request.planning_group = ARM;
-
+                plan_service.request.start_state = full_traj[i-1].joint_trajectory.points.back().positions;
+                
                 if (plan_client.call(plan_service)){   
                     ROS_INFO_STREAM("Calling planning server");
-
+                    
+                    //if the plan is succesfull add it to the full trajectory 
                     if(plan_service.response.success){
-
-                        trajectory_goal.trajectory = plan_service.response.trajectory;
-                        ROS_INFO_STREAM("Returned path has: " << trajectory_goal.trajectory.joint_trajectory.points.size() << " points");
-                        
-                        if (!action_client.isServerConnected()){
-                            ROS_ERROR_STREAM("Cannot reach trajectory server!" << action_client.getState().getText());
-                        }
-
-                        else {
-                            action_client.sendGoal(trajectory_goal);
-
-                            if (!action_client.waitForResult()){
-                                ROS_INFO_STREAM("move_group_interface" << "ExecuteTrajectory action returned early" << action_client.getState().getText());
-                            }
-
-                            else{
-                                
-                                if(action_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-                                    ROS_INFO_STREAM("Trajectory executed succesfully");  
-                                    
-                                }
-
-                                else{
-                                    ROS_INFO_STREAM("move_group_interface" << action_client.getState().toString()<< ": " << action_client.getState().getText());
-                                    
-                                }
-                            }
-                        }   
+                        full_traj.push_back(plan_service.response.trajectory);
+                        ROS_INFO_STREAM(BOLDGREEN << "Plan " << i+1 << " successful" <<  std::flush);
+                        uclv::askContinue("Continue planning?");
                     }
 
                     else{
@@ -209,7 +195,43 @@ int main(int argc, char** argv){
                     ROS_ERROR_STREAM("Failed to call planning service");
                     return -1;
                 }
-            }      
+            }
+            /****PLANNING*****/
+
+            /****EXECUTION****/
+            if (!action_client.isServerConnected())
+                    ROS_ERROR_STREAM("Cannot reach trajectory server!" << action_client.getState().getText());
+
+            if (uclv::askContinue("EXECUTE TRAJECTORY?")){
+                for(int i=0; i<full_traj.size(); i++){
+                    
+                    trajectory_goal.trajectory = full_traj[i];
+                    action_client.sendGoal(trajectory_goal);
+
+                    if (!action_client.waitForResult()){
+                        ROS_INFO_STREAM("move_group_interface" << "ExecuteTrajectory action returned early" << action_client.getState().getText());
+                    }
+
+                    else{
+                        
+                        if(action_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+                            ROS_INFO_STREAM("Trajectory executed succesfully");  
+                            
+                        }
+
+                        else{
+                            ROS_INFO_STREAM("move_group_interface" << action_client.getState().toString()<< ": " << action_client.getState().getText());
+                            
+                        }
+                    }
+                    
+                }
+            }
+
+            else{
+                ROS_ERROR_STREAM("Execution aborted by the user!");
+            }
+        
         }
 
         else{

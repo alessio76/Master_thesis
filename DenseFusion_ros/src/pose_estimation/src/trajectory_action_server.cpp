@@ -102,29 +102,20 @@ namespace uclv
         }
         
         else{
-          
-            if (uclv::askContinue("EXECUTION ON REAL ROBOT")){
-              this->execute_robot(goal->trajectory);
+            this->execute_robot(goal->trajectory);
 
-              // Check if goal is done
-              if (ros::ok() && this->success==true){
-                this->result_string = "Trajectory execution finished successfully!";
-                as_.setSucceeded(this->result_,this->result_string);
-              }
-
-              else{
-                this->result_string = "Trajectory execution failed!";
-                as_.setAborted(this->result_, this->result_string);
-              }
-              
+            // Check if goal is done
+            if (ros::ok() && this->success==true){
+              this->result_string = "Trajectory execution finished successfully!";
+              as_.setSucceeded(this->result_,this->result_string);
             }
 
             else{
-                this->result_string = "Aborted execution caused by user!";
-                this->success=false;
-                as_.setAborted(this->result_, this->result_string);
+              this->result_string = "Trajectory execution failed!";
+              as_.setAborted(this->result_, this->result_string);
             }
-            
+              
+           
         }
 
       ROS_INFO_STREAM(BOLDGREEN << this->result_string << RESET << std::endl);

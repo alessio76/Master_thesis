@@ -49,10 +49,13 @@ namespace uclv{
     Eigen::Isometry3f base_to_t = link_t_goal_pose(tfBuffer, goal_pos, goal_quat);
     Eigen::Quaternionf base_to_t_quat = Eigen::Quaternionf(base_to_t.rotation());
     geometry_msgs::Pose goal_pose = eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation()));
+    moveit::core::RobotState start_state(*move_group_interface.getCurrentState());
+    start_state.setJointGroupPositions(req.planning_group, req.start_state);
+    move_group_interface.setStartState(start_state);
 
     if(req.planning_space == "joint"){
-    //convert the tf2 structur einto a gemetry_msgs one sincmoveit wants the last one
-    
+
+    //convert the tf2 structure into a geometry_msgs one since moveit wants a pose
     move_group_interface.setPoseTarget(goal_pose);
     success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
     trajectory=my_plan.trajectory_;

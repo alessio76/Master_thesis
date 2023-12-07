@@ -5,20 +5,22 @@
 	<arg name="trajectory_action_name_arg" default="/trajectory_action_server" />
 	<arg name="end_effector_frame_arg" default="ee_fingers" />
 	<arg name="pre_grasp_offset_arg" default="0.15"/>
+	<arg name="source_list_arg" default="[/motoman/joint_states]"/>
 
 	<param name="simulation" value="$(arg simulation_arg)" type="bool"/>
 	<param name="trajectory_action_name" value="$(arg trajectory_action_name_arg)" type="string"/>
 	<param name="end_effector_frame_name" value="$(arg end_effector_frame_arg)" type="string"/>
 	<param name="pre_grasp_offset_name" value="$(arg pre_grasp_offset_arg)"/>
 	
-	
-	<include file="$(find yaskawa_moveit_config)/launch/demo.launch"/>
 
-
-	<remap from="/trajectory_action_server/goal" to="/motoman/joint_ll_control" if="$(arg simulation_arg)"/>
+	<include file="$(find yaskawa_moveit_config)/launch/demo.launch">
+		<arg name="source_list" value="$(arg source_list_arg)" unless="$(arg simulation_arg)"/>
+	</include>
 	
 	
-	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen"/>
+	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen">
+		<remap from="/move_group/fake_controller_joint_states" to="/motoman/joint_ll_control" unless="$(arg simulation_arg)"/>
+	</node>
 	
 	<node name="plan_server" pkg="pose_estimation" type="plan_node" output="screen"/>
 	<node name="pre_grasp_server" pkg="pose_estimation" type="pre_grasp_selection_node" output="screen"/>
