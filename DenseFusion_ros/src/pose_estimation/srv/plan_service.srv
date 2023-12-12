@@ -2,6 +2,7 @@ geometry_msgs/TransformStamped goal_transform
 string planning_group
 string planning_space
 float64[] start_state
+string attach_obj_id
 ---
 moveit_msgs/RobotTrajectory trajectory
 bool success

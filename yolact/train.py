@@ -52,7 +52,7 @@ parser.add_argument('--decay', '--weight_decay', default=None, type=float,
                     help='Weight decay for SGD. Leave as None to read this from the config.')
 parser.add_argument('--gamma', default=None, type=float,
                     help='For each lr step, what to multiply the lr by. Leave as None to read this from the config.')
-parser.add_argument('--save_folder', default='weights/',
+parser.add_argument('--save_folder', default='/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/dataset_apple_7/yolact/weights/',
                     help='Directory for saving checkpoint models.')
 parser.add_argument('--log_folder', default='logs/',
                     help='Directory for saving logs.')
@@ -83,6 +83,7 @@ parser.add_argument('--batch_alloc', default=None, type=str,
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
 parser.add_argument('--mAP', default=None, type=float,help='initial mAP to beat')
+parser.add_argument('--tensorflow_dir', help='directory to store tensorflow data')
 
 parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
@@ -266,9 +267,8 @@ def train():
         mAP_now=mAP_old
         
 
-    """optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
-                          weight_decay=args.decay)"""
-    optimizer=optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.decay)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.decay)
+    #optimizer=optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.decay)
     criterion = MultiBoxLoss(num_classes=cfg.num_classes,
                              pos_threshold=cfg.positive_iou_threshold,
                              neg_threshold=cfg.negative_iou_threshold,
@@ -314,7 +314,7 @@ def train():
     #input('Press enter to begin training')
     print('Begin training!')
     
-    writer = SummaryWriter('logs/santal_session')
+    writer = SummaryWriter(args.tensorflow_dir)
     # try-except so you can use ctrl+c to save early and stop training
     
     try:
@@ -402,7 +402,6 @@ def train():
                     print(string)
                     writer.add_scalars('Loss', { 'Training' : total}, iteration)
                     writer.flush()
-                    #yield iteration,total,mAP_now
 
                 if args.log:
                     precision = 5
@@ -459,10 +458,7 @@ def train():
         if(best_model!=None):
             yolact_net.save_weights(save_path(epoch, repr(iteration)))
             exit()
-            """if interactive:
-                plt.savefig("logs/last_result.png")"""
            
-
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Saving network...')

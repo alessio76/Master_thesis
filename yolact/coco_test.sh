@@ -5,4 +5,4 @@ show_imgs=$2
 #annotation file name to inspect
 ann_file=$1
 
-python3 data/santal_dataset/coco_test.py --ann-file data/santal_dataset/$1 $2 
+python3 data/santal_dataset/coco_test.py --ann-file data/apple_dataset/$1 $2 

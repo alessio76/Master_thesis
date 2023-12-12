@@ -4,3 +4,4 @@ string planning_group
 geometry_msgs/TransformStamped pre_grasp_pose
 moveit_msgs/RobotTrajectory trajectory
 bool success
+float32 gripper_width

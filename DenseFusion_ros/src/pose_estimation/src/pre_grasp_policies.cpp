@@ -12,6 +12,36 @@ namespace uclv{
 
     }
 
+    float PreGraspPolicies::gripper_width_selection(const Eigen::Matrix3f& pre_grasp_rot, const Eigen::Matrix3f& obj_rot){
+
+        //calculate the dot product between the versors of the object frame and the sliding versor of the the pre_grasp fram (all expressed in the base frame)
+        Eigen::Vector3f allignment = obj_rot.transpose() * pre_grasp_rot.col(1);
+        Eigen::Index non_zero_elem;
+
+        //by construction only 1 element will be non 0. For numerical reasons use the max to identify its index
+        allignment.array().abs().maxCoeff(&non_zero_elem);
+
+        //based on which versor is aligned with the sliding verson of the end effector use a different gripper width
+        switch (static_cast<int>(non_zero_elem)){
+        case 0:
+            return gripper_widths["on_x"];
+            break;
+        
+        case 1:
+            return gripper_widths["on_y"];
+            break;
+        
+        case 2:
+            return gripper_widths["on_z"];
+            break;
+        
+        default:
+            break;
+        }
+
+
+    }
+
     /*
     This function simply generates all the pregrasp poses and gives as result the first feasible
     */
@@ -31,7 +61,8 @@ namespace uclv{
     pose_estimation::pre_grasp_service::Response PreGraspPolicies::first_hit(const Eigen::Isometry3f& obj_pose_world_frame){
         int i=0;
         int j=0;
-        
+        float calculated_gripper_width;
+
         while(i < uclv::PreGraspBasePoses::N_BASE_FRAMES && !success){
             while(j < uclv::PreGraspBasePoses::N_GRIPPER_ROTATIONS && !success){
                 //transform the candidate pose to base frame
@@ -52,9 +83,10 @@ namespace uclv{
                 success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
                 //if the plan is successfull save the candidate pose
-                if(success) 
+                if(success){ 
                     pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", out.str(), pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));
-                //else continue the search          
+                    calculated_gripper_width = gripper_width_selection(pre_grasp.rotation(), obj_pose_world_frame.rotation());
+                }//else continue the search          
                 j++;
             }
             j=0;
@@ -64,7 +96,7 @@ namespace uclv{
         out_res.pre_grasp_pose = pre_grasp_pose;
         out_res.success = success;
         out_res.trajectory = my_plan.trajectory_;
-    
+        out_res.gripper_width = calculated_gripper_width;
         static_broadcaster.sendTransform(pre_grasp_pose);
         
         return out_res;
@@ -93,7 +125,9 @@ namespace uclv{
                                             transformStamped.transform.rotation.x,
                                             transformStamped.transform.rotation.y,
                                             transformStamped.transform.rotation.z);
-
+        
+        float calculated_gripper_width;
+        
         //generate all pregraso pose
         for(int i=0; i < uclv::PreGraspBasePoses::N_BASE_FRAMES;i++){
             for(int j=0; j < uclv::PreGraspBasePoses::N_GRIPPER_ROTATIONS;j++){
@@ -114,21 +148,23 @@ namespace uclv{
         //since std::map sorts in ascending order by defaults, the first feasible pregrasp pose is also the best (the one at minimun angular-linear distance)
         auto it = scored_pregrasp.begin();
         while (it != scored_pregrasp.end() && !success) {
-            
-            Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, it->second.translation(), Eigen::Quaternionf(it->second.rotation()));
+            Eigen::Isometry3f pre_grasp = it->second;
+            Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));
             geometry_msgs::Pose plan_pose = uclv::eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation()));
             move_group_interface.setPoseTarget(plan_pose);
             success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
             
-            if(success) 
-                pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", it->second.translation(), Eigen::Quaternionf(it->second.rotation()));
-            
+            if(success){
+                pre_grasp_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));
+                calculated_gripper_width = gripper_width_selection(pre_grasp.rotation(), obj_pose_world_frame.rotation());
+            }
             ++it;
         }
 
         out_res.trajectory = my_plan.trajectory_;
         out_res.pre_grasp_pose = pre_grasp_pose;
         out_res.success = success;
+        out_res.gripper_width = calculated_gripper_width;
         static_broadcaster.sendTransform(pre_grasp_pose);
         return out_res;
         }

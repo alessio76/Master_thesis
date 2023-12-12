@@ -20,7 +20,7 @@ elif [ "$#" -eq 1 ]; then
 python3 -W ignore eval.py --cuda 1 --trained_model weights/santal_43_225592_interrupt.pth --image $1 --display --cross_class_nms 1
 
 elif [ "$#" -eq 0 ]; then
-python3 -W ignore eval.py --cuda 1 --trained_model weights/santal_51_270000.pth 
+python3 -W ignore eval.py --cuda 1 --trained_model weights/santal_42_371238.pth 
 fi
 
 

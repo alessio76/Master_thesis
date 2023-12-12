@@ -15,6 +15,7 @@
 #include "pose_estimation/TrajectoryAction.h"
 #include "pose_estimation/plan_service.h"
 #include "pose_estimation/pre_grasp_service.h"
+#include "sun_wsg50_common/Move.h"
 
 namespace uclv{
 
@@ -33,20 +34,10 @@ namespace uclv{
         mesh = boost::get<shape_msgs::Mesh>(mesh_msg);
 
         object_to_attach.header.frame_id = "base_link";
-    
-        geometry_msgs::Pose santal_pose;
-        Eigen::Quaternionf rand_quat=Eigen::Quaternionf::UnitRandom();
-        santal_pose.orientation.w = 1.0;
-        /*santal_pose.orientation.w = rand_quat.w();
-        santal_pose.orientation.z = rand_quat.z();
-        santal_pose.orientation.y = rand_quat.y();
-        santal_pose.orientation.x = rand_quat.x();*/
-
-        santal_pose.position.x = 0.8;
-        //santal_pose.position.y = 0.2;
-        santal_pose.position.z = 0.6;
+        //Eigen::AngleAxisf(M_PI /2, Eigen::Vector3f::UnitX()
+        Eigen::Isometry3f obj_pose(Eigen::Translation3f(0.4, 0, 0) * Eigen::Quaternionf(Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitZ())));
+        geometry_msgs::Pose santal_pose=uclv::eigen_to_Pose(obj_pose.translation(), Eigen::Quaternionf(obj_pose.rotation()));
         
-
         Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);
         Eigen::Quaternionf santal_ori(santal_pose.orientation.w, santal_pose.orientation.x, santal_pose.orientation.y, santal_pose.orientation.z);
         Eigen::Isometry3f santal_transform(Eigen::Translation3f(santal_position) * Eigen::Quaternionf(santal_ori));
@@ -69,24 +60,106 @@ namespace uclv{
         return grasp_pose;
     }
 
+
+
+bool call_plan_service(std::vector<std::tuple<moveit_msgs::RobotTrajectory, std::string, std::string>>& full_traj, const Eigen::Isometry3f& target_pose,
+                       pose_estimation::plan_service& plan_service, const std::string& planning_space, const std::string& planning_group, 
+                       tf2_ros::StaticTransformBroadcaster& static_broadcaster, ros::ServiceClient& plan_client, const std::string& attach_obj_id="",
+                       const std::string& move_gripper=""){
+    
+    std::ostringstream out;
+    
+    Eigen::Vector3f trans = target_pose.translation();
+    Eigen::Quaternionf quat = Eigen::Quaternionf(target_pose.rotation());
+    //transform to be published on tf for visualization
+    geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", trans, quat);
+    static_broadcaster.sendTransform(goal_pose);
+    plan_service.request.goal_transform = goal_pose;
+    plan_service.request.planning_space = planning_space;
+    plan_service.request.planning_group = planning_group;
+    plan_service.request.attach_obj_id = attach_obj_id;
+    plan_service.request.start_state = std::get<0>(full_traj[full_traj.size()-1]).joint_trajectory.points.back().positions;
+    
+    if (plan_client.call(plan_service)){   
+        ROS_INFO_STREAM("Calling planning server");
+        
+        //if the plan is succesfull add it to the full trajectory 
+        if(plan_service.response.success){
+            full_traj.push_back(std::make_tuple(plan_service.response.trajectory, move_gripper, attach_obj_id));
+            return true;
+        }
+
+        else{
+            ROS_ERROR_STREAM("Planning Failed");
+            return false;
+        }
+    }
+
+    else{
+
+        ROS_ERROR_STREAM("Failed to call planning service");
+        return false;
+    }
+
 }
 
+bool move_gripper(float gripper_width, bool simulation, ros::Publisher& joint_pub, const std::string& gripper_command){
+    static int n=0;
+    bool success=true;
+    
+    if(simulation){
+        sensor_msgs::JointState joint_cmd;
+       
+        joint_cmd.header.seq = n++;
+        joint_cmd.header.stamp = ros::Time::now();
+        joint_cmd.name.push_back("right_joint");
+        
+        if(gripper_command == "close"){
+            joint_cmd.position.push_back(-(68 - gripper_width)/(2*1e3));
+           
+        }
+        else if (gripper_command == "open")
+            joint_cmd.position.push_back(0);
+        
+        joint_cmd.velocity.push_back(0);
+        joint_pub.publish(joint_cmd);
+
+    }
+    
+    else{
+
+
+
+
+
+    }
+
+    return success;
+}
+
+
+}
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "main_node");
 
     ros::NodeHandle n;
+    const std::string topic_name="gripper_joints";
+    ros::Publisher joint_pub = n.advertise<sensor_msgs::JointState>(topic_name, 1);
     ros::ServiceClient pre_grasp_client = n.serviceClient<pose_estimation::pre_grasp_service>("pre_grasp_service");
+    ros::ServiceClient move_gripper_client = n.serviceClient<sun_wsg50_common::Move>("/move");
     ros::ServiceClient plan_client = n.serviceClient<pose_estimation::plan_service>("plan_service");
     pose_estimation::plan_service plan_service;
     pose_estimation::pre_grasp_service pre_grasp_service;
     actionlib::SimpleActionClient<pose_estimation::TrajectoryAction> action_client("trajectory_action_server",true);
     std::string end_effector_frame;
-    float pre_grasp_offset;
     
+    float pre_grasp_offset;
+    float gripper_width;
+
     n.getParam("end_effector_frame_name", end_effector_frame);
     n.getParam("pre_grasp_offset_name", pre_grasp_offset);
-    std::vector<moveit_msgs::RobotTrajectory> full_traj;
+    std::vector<std::tuple<moveit_msgs::RobotTrajectory, std::string, std::string>> full_traj;
     //wait for the planning service to be up
     pre_grasp_client.waitForExistence();
 
@@ -96,11 +169,13 @@ int main(int argc, char** argv){
     //wait for action server
     action_client.waitForServer();
 
+    //move_gripper_client.waitForExistence();
+
     pose_estimation::TrajectoryGoal trajectory_goal;
     bool simulation;
     n.getParam("simulation",simulation);
-    static const std::string ARM = "yaskawa_arm";
-    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    const std::string ARM = "yaskawa_arm";
+    tf2_ros::StaticTransformBroadcaster static_broadcaster;
 
     //message to the server
     geometry_msgs::TransformStamped out_message;
@@ -109,6 +184,10 @@ int main(int argc, char** argv){
     Eigen::Isometry3f pre_grasp_pose;
     Eigen::Isometry3f post_grasp_pose;
     Eigen::Isometry3f obj_pose;
+    Eigen::Isometry3f pre_place_pose;
+    Eigen::Isometry3f place_pose;
+    Eigen::Isometry3f post_place_pose;
+
     //if simulation is true build a fake scene
     if(simulation){
         
@@ -134,13 +213,13 @@ int main(int argc, char** argv){
    
     if (pre_grasp_client.call(pre_grasp_service)){   
         ROS_INFO_STREAM("Calling pre_grasp server");
-
         //if a feasible pre_grasp pose is found, add it to the trajectory vector
         if(pre_grasp_service.response.success){
-            ROS_INFO_STREAM("Pre grasp sucess");
+            gripper_width = pre_grasp_service.response.gripper_width;
+            ROS_INFO_STREAM("*************" << gripper_width);
 
-            full_traj.push_back(pre_grasp_service.response.trajectory);
-
+            full_traj.push_back(std::make_tuple(pre_grasp_service.response.trajectory, "", ""));
+            
             Eigen::Translation3f pre_grasp_trans(pre_grasp_service.response.pre_grasp_pose.transform.translation.x,
                                                 pre_grasp_service.response.pre_grasp_pose.transform.translation.y,
                                                 pre_grasp_service.response.pre_grasp_pose.transform.translation.z);
@@ -151,85 +230,73 @@ int main(int argc, char** argv){
                                             pre_grasp_service.response.pre_grasp_pose.transform.rotation.z);
                                             
             pre_grasp_pose = Eigen::Isometry3f(pre_grasp_trans * pre_grasp_rot);
-            post_grasp_pose = pre_grasp_pose;
             grasp_pose = uclv::set_grasp_pose(pre_grasp_pose, pre_grasp_offset);
-            std::array<std::tuple<std::string, Eigen::Isometry3f>, 3> task_poses{
-                                                                std::make_tuple("cartesian", pre_grasp_pose),
-                                                                std::make_tuple("cartesian", grasp_pose),
-                                                                std::make_tuple("cartesian", post_grasp_pose)
-                                                                };
-            
-            std::ostringstream out;
-            uclv::askContinue("Continue planning?");
-            //first element of task pose is the pregrasp pose, for which the plan has already been made
-            for(int i=1; i<task_poses.size(); i++){
-        
-                Eigen::Vector3f trans = std::get<1>(task_poses[i]).translation();
-                Eigen::Quaternionf quat = Eigen::Quaternionf(std::get<1>(task_poses[i]).rotation());
-                //transform to be published on tf for visualization
-                geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", trans, quat);
-                static_broadcaster.sendTransform(goal_pose);
-                plan_service.request.goal_transform = goal_pose;
-                plan_service.request.planning_space = std::get<0>(task_poses[i]);
-                plan_service.request.planning_group = ARM;
-                plan_service.request.start_state = full_traj[i-1].joint_trajectory.points.back().positions;
+            //uclv::askContinue("Calling Grasp plan");
+          
+            if(uclv::call_plan_service(full_traj, grasp_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, "", "close")){
                 
-                if (plan_client.call(plan_service)){   
-                    ROS_INFO_STREAM("Calling planning server");
-                    
-                    //if the plan is succesfull add it to the full trajectory 
-                    if(plan_service.response.success){
-                        full_traj.push_back(plan_service.response.trajectory);
-                        ROS_INFO_STREAM(BOLDGREEN << "Plan " << i+1 << " successful" <<  std::flush);
-                        uclv::askContinue("Continue planning?");
-                    }
+                //uclv::askContinue("Calling attach object and post grasp plan");
+                post_grasp_pose = pre_grasp_pose;
 
-                    else{
-                        ROS_ERROR_STREAM("Planning Failed");
-                        return -1;
-                    }
-                }
+                if(uclv::call_plan_service(full_traj, post_grasp_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, "santal")){
+                    pre_place_pose = post_grasp_pose * Eigen::Isometry3f(Eigen::Translation3f(0, 0.2,0) * Eigen::Quaternionf(1,0,0,0));
+                    //uclv::askContinue("Calling pre_place plan");
 
-                else{
+                    if(uclv::call_plan_service(full_traj, pre_place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, "santal")){
+                        place_pose = pre_place_pose * Eigen::Isometry3f(Eigen::Translation3f(Eigen::Vector3f::UnitZ() * 0.15));
+                        ///uclv::askContinue("Calling place plan");
 
-                    ROS_ERROR_STREAM("Failed to call planning service");
-                    return -1;
-                }
-            }
-            /****PLANNING*****/
+                        if(uclv::call_plan_service(full_traj, place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, "santal", "open")){
+                            post_place_pose=pre_place_pose;
+                            ///uclv::askContinue("Calling post_place plan");
 
-            /****EXECUTION****/
-            if (!action_client.isServerConnected())
-                    ROS_ERROR_STREAM("Cannot reach trajectory server!" << action_client.getState().getText());
+                            if(uclv::call_plan_service(full_traj, post_place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client)){
+                                /****PLANNING*****/
 
-            if (uclv::askContinue("EXECUTE TRAJECTORY?")){
-                for(int i=0; i<full_traj.size(); i++){
-                    
-                    trajectory_goal.trajectory = full_traj[i];
-                    action_client.sendGoal(trajectory_goal);
+                                /****EXECUTION****/
+                                if (!action_client.isServerConnected())
+                                        ROS_ERROR_STREAM("Cannot reach trajectory server!" << action_client.getState().getText());
 
-                    if (!action_client.waitForResult()){
-                        ROS_INFO_STREAM("move_group_interface" << "ExecuteTrajectory action returned early" << action_client.getState().getText());
-                    }
+                                    if (uclv::askContinue("EXECUTE TRAJECTORY?")){
+                                        for(int i=0; i<full_traj.size(); i++){
+                                            
+                                            trajectory_goal.trajectory = std::get<0>(full_traj[i]);
+                                            action_client.sendGoal(trajectory_goal);
 
-                    else{
-                        
-                        if(action_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-                            ROS_INFO_STREAM("Trajectory executed succesfully");  
-                            
+                                            if (!action_client.waitForResult()){
+                                                ROS_INFO_STREAM("move_group_interface" << "ExecuteTrajectory action returned early" << action_client.getState().getText());
+                                            }
+
+                                            else{
+                                                
+                                                if(action_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+                                                    ROS_INFO_STREAM("Trajectory executed succesfully");  
+                                                
+
+                                                else
+                                                    ROS_INFO_STREAM("move_group_interface" << action_client.getState().toString()<< ": " << action_client.getState().getText());
+                                                
+                                            }
+                                            ROS_INFO_STREAM(std::get<1>(full_traj[i]));
+                                            
+                                            if(std::get<1>(full_traj[i]) != "")
+                                                uclv::move_gripper(gripper_width, simulation, joint_pub, std::get<1>(full_traj[i]));
+                                            
+                                        }
+                                        }
+
+                                       
+                                    
+                            }
                         }
-
-                        else{
-                            ROS_INFO_STREAM("move_group_interface" << action_client.getState().toString()<< ": " << action_client.getState().getText());
-                            
-                        }
-                    }
                     
+                    
+                    }
                 }
             }
 
             else{
-                ROS_ERROR_STREAM("Execution aborted by the user!");
+                ROS_ERROR_STREAM("Grasp planning failed");
             }
         
         }

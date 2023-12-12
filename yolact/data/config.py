@@ -197,6 +197,7 @@ YCB_CLASSES = (
 )
 
 SANTAL_CLASSES = ("santal_ace")
+APPLE_CLASSES = ("obj")
 
 ycb_dataset = dataset_base.copy({
     'name': 'YCB Video Dataset',
@@ -245,6 +246,29 @@ santal_dataset = dataset_base.copy({
    
 
     'class_names': SANTAL_CLASSES,
+})
+
+apple_dataset = dataset_base.copy({
+   'name': 'Apple Dataset',
+                                       
+    'train_images': 'data/apple_dataset/train',
+                    
+
+    'valid_images': 'data/apple_dataset/val',
+   
+
+    'train_info': 'data/apple_dataset/train.json',
+    'valid_info': 'data/apple_dataset/val.json',
+
+    #'train_images': 'data/santal_dataset/train_test',
+    #'valid_images': 'data/santal_dataset/val_test',
+   
+
+    #'train_info': 'data/santal_dataset/train_test.json',
+    #'valid_info': 'data/santal_dataset/val_test.json',
+   
+
+    'class_names': APPLE_CLASSES,
 })
 
 # ----------------------- TRANSFORMS ----------------------- #
@@ -859,7 +883,7 @@ my_yolact_ycb_config = yolact_resnet50_config.copy({
 
 })
 
-max_epochs=100
+
 santal_config = yolact_darknet53_config.copy({
     'name': "santal",  # Will default to yolact_resnet50_pascal
 
@@ -867,7 +891,20 @@ santal_config = yolact_darknet53_config.copy({
     'dataset': santal_dataset,
     'num_classes': len(santal_dataset.class_names) + 1,
     #iteration per epoch 5230 for a batch size of 8
-    'max_iter': 5230 *  max_epochs,
+    'max_iter': 1e6,
+    #'max_iter': 10040,
+    
+
+})
+
+apple_config = yolact_darknet53_config.copy({
+    'name': "apple",  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'dataset': apple_dataset,
+    'num_classes': len(apple_dataset.class_names) + 1,
+    #iteration per epoch 5230 for a batch size of 8
+    'max_iter': 1e6,
     #'max_iter': 10040,
     
 

@@ -22,7 +22,7 @@ namespace uclv
       ros::Publisher joint_pub;
       bool success=true;
       double rate=50;
-      float scale_factor=1.0;
+      float scale_factor=2.0;
       std::string result_string;
       bool simulation=false;
 
@@ -62,7 +62,7 @@ namespace uclv
             double tf=0.0;
             Eigen::Matrix<double, 6, Eigen::Dynamic> coeff = Eigen::Matrix<double, 6, Eigen::Dynamic>::Zero(6, num_joints);
             int num_points_traj = int(trajectory.joint_trajectory.points.size());
-              const double sleep_time = 1.0 / rate;
+            const double sleep_time = 1.0 / rate;
 
             for (int j = 0; j < num_points_traj - 1; j++)
             {
