@@ -13,11 +13,22 @@
 	<param name="pre_grasp_offset_name" value="$(arg pre_grasp_offset_arg)"/>
 	
 
+	<group>
+	<remap from="/joint_states" to="/gripper_joints"/>
+	<include file="$(find sun_wsg50_driver)/launch/wsg50_tcp_script.launch">
+		<arg name="gripper_ip" value="192.168.2.111"/>
+		
+	</include>
+	</group>
+
+
+
 	<include file="$(find yaskawa_moveit_config)/launch/demo.launch">
 		<arg name="source_list" value="$(arg source_list_arg)" unless="$(arg simulation_arg)"/>
 	</include>
 	
 	
+
 	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen">
 		<remap from="/move_group/fake_controller_joint_states" to="/motoman/joint_ll_control" unless="$(arg simulation_arg)"/>
 	</node>

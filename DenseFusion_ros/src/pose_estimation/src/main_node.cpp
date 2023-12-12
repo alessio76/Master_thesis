@@ -16,7 +16,7 @@
 #include "pose_estimation/plan_service.h"
 #include "pose_estimation/pre_grasp_service.h"
 #include "sun_wsg50_common/Move.h"
-
+#include "std_srvs/Empty.h"
 namespace uclv{
 
     Eigen::Isometry3f sim_scene(){
@@ -35,7 +35,7 @@ namespace uclv{
 
         object_to_attach.header.frame_id = "base_link";
         //Eigen::AngleAxisf(M_PI /2, Eigen::Vector3f::UnitX()
-        Eigen::Isometry3f obj_pose(Eigen::Translation3f(0.4, 0, 0) * Eigen::Quaternionf(Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitZ())));
+        Eigen::Isometry3f obj_pose(Eigen::Translation3f(0.4, 0, 0) * Eigen::Quaternionf(Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ())));
         geometry_msgs::Pose santal_pose=uclv::eigen_to_Pose(obj_pose.translation(), Eigen::Quaternionf(obj_pose.rotation()));
         
         Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);
@@ -62,92 +62,128 @@ namespace uclv{
 
 
 
-bool call_plan_service(std::vector<std::tuple<moveit_msgs::RobotTrajectory, std::string, std::string>>& full_traj, const Eigen::Isometry3f& target_pose,
-                       pose_estimation::plan_service& plan_service, const std::string& planning_space, const std::string& planning_group, 
-                       tf2_ros::StaticTransformBroadcaster& static_broadcaster, ros::ServiceClient& plan_client, const std::string& attach_obj_id="",
-                       const std::string& move_gripper=""){
-    
-    std::ostringstream out;
-    
-    Eigen::Vector3f trans = target_pose.translation();
-    Eigen::Quaternionf quat = Eigen::Quaternionf(target_pose.rotation());
-    //transform to be published on tf for visualization
-    geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", trans, quat);
-    static_broadcaster.sendTransform(goal_pose);
-    plan_service.request.goal_transform = goal_pose;
-    plan_service.request.planning_space = planning_space;
-    plan_service.request.planning_group = planning_group;
-    plan_service.request.attach_obj_id = attach_obj_id;
-    plan_service.request.start_state = std::get<0>(full_traj[full_traj.size()-1]).joint_trajectory.points.back().positions;
-    
-    if (plan_client.call(plan_service)){   
-        ROS_INFO_STREAM("Calling planning server");
+    bool call_plan_service(std::vector<std::tuple<moveit_msgs::RobotTrajectory, std::string, std::string>>& full_traj, const Eigen::Isometry3f& target_pose,
+                        pose_estimation::plan_service& plan_service, const std::string& planning_space, const std::string& planning_group, 
+                        tf2_ros::StaticTransformBroadcaster& static_broadcaster, ros::ServiceClient& plan_client, const std::string& attach_obj_id="",
+                        const std::string& move_gripper=""){
         
-        //if the plan is succesfull add it to the full trajectory 
-        if(plan_service.response.success){
-            full_traj.push_back(std::make_tuple(plan_service.response.trajectory, move_gripper, attach_obj_id));
-            return true;
+        std::ostringstream out;
+        
+        Eigen::Vector3f trans = target_pose.translation();
+        Eigen::Quaternionf quat = Eigen::Quaternionf(target_pose.rotation());
+        //transform to be published on tf for visualization
+        geometry_msgs::TransformStamped goal_pose = uclv::eigen_to_TransformedStamped("base_link", "goal_pose", trans, quat);
+        static_broadcaster.sendTransform(goal_pose);
+        plan_service.request.goal_transform = goal_pose;
+        plan_service.request.planning_space = planning_space;
+        plan_service.request.planning_group = planning_group;
+        plan_service.request.attach_obj_id = attach_obj_id;
+        plan_service.request.start_state = std::get<0>(full_traj[full_traj.size()-1]).joint_trajectory.points.back().positions;
+        
+        if (plan_client.call(plan_service)){   
+            ROS_INFO_STREAM("Calling planning server");
+            
+            //if the plan is succesfull add it to the full trajectory 
+            if(plan_service.response.success){
+                full_traj.push_back(std::make_tuple(plan_service.response.trajectory, move_gripper, attach_obj_id));
+                return true;
+            }
+
+            else{
+                ROS_ERROR_STREAM("Planning Failed");
+                return false;
+            }
         }
 
         else{
-            ROS_ERROR_STREAM("Planning Failed");
+
+            ROS_ERROR_STREAM("Failed to call planning service");
             return false;
         }
+
     }
 
-    else{
-
-        ROS_ERROR_STREAM("Failed to call planning service");
-        return false;
-    }
-
-}
-
-bool move_gripper(float gripper_width, bool simulation, ros::Publisher& joint_pub, const std::string& gripper_command){
-    static int n=0;
-    bool success=true;
-    
-    if(simulation){
-        sensor_msgs::JointState joint_cmd;
-       
-        joint_cmd.header.seq = n++;
-        joint_cmd.header.stamp = ros::Time::now();
-        joint_cmd.name.push_back("right_joint");
+    bool move_gripper(float gripper_width, bool simulation, ros::Publisher& joint_pub, const std::string& gripper_command, ros::NodeHandle& nh){
+        static int n=0;
+        bool success=true;
         
-        if(gripper_command == "close"){
-            joint_cmd.position.push_back(-(68 - gripper_width)/(2*1e3));
-           
+        /*if(simulation){
+            sensor_msgs::JointState joint_cmd;
+        
+            joint_cmd.header.seq = n++;
+            joint_cmd.header.stamp = ros::Time::now();
+            joint_cmd.name.push_back("gripper_joint");
+            
+            if(gripper_command == "close"){
+                joint_cmd.position.push_back(-(68 - gripper_width)/(2*1e3));
+            
+            }
+            else if (gripper_command == "open")
+                joint_cmd.position.push_back(0);
+            
+            joint_cmd.velocity.push_back(0);
+            joint_pub.publish(joint_cmd);
+
+        }*/
+        
+        //real gripper
+        if(simulation){
+            
+            if(gripper_command == "close"){
+
+                ros::ServiceClient gripper_client = nh.serviceClient<sun_wsg50_common::Move>("/move");
+                sun_wsg50_common::Move close_service;
+                close_service.request.width = gripper_width;
+                close_service.request.speed = 50;
+
+                if (gripper_client.call(close_service)){
+
+                    if(close_service.response.error){
+                        ROS_ERROR_STREAM(close_service.response.error);
+                        success = false;
+                    }
+
+                }
+
+                else{
+
+                    ROS_ERROR_STREAM("Failed to call grasp service");
+                    success = false;
+                }
+            
+            }
+
+            else if (gripper_command == "open"){
+                ros::ServiceClient gripper_client = nh.serviceClient<std_srvs::Empty>("/homing");
+                std_srvs::Empty open_service;
+
+                if (gripper_client.call(open_service)){
+
+                } 
+
+                else{
+                    ROS_ERROR_STREAM("Failed to call grasp service");
+                    success = false;
+                }
+                
+            }
         }
-        else if (gripper_command == "open")
-            joint_cmd.position.push_back(0);
         
-        joint_cmd.velocity.push_back(0);
-        joint_pub.publish(joint_cmd);
-
+        return success;
     }
-    
-    else{
-
-
-
-
-
-    }
-
-    return success;
-}
-
 
 }
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "main_node");
-
     ros::NodeHandle n;
+    bool simulation;
+    n.getParam("simulation",simulation);
     const std::string topic_name="gripper_joints";
     ros::Publisher joint_pub = n.advertise<sensor_msgs::JointState>(topic_name, 1);
     ros::ServiceClient pre_grasp_client = n.serviceClient<pose_estimation::pre_grasp_service>("pre_grasp_service");
-    ros::ServiceClient move_gripper_client = n.serviceClient<sun_wsg50_common::Move>("/move");
+    
+   
     ros::ServiceClient plan_client = n.serviceClient<pose_estimation::plan_service>("plan_service");
     pose_estimation::plan_service plan_service;
     pose_estimation::pre_grasp_service pre_grasp_service;
@@ -168,12 +204,9 @@ int main(int argc, char** argv){
     
     //wait for action server
     action_client.waitForServer();
-
-    //move_gripper_client.waitForExistence();
-
+    
     pose_estimation::TrajectoryGoal trajectory_goal;
-    bool simulation;
-    n.getParam("simulation",simulation);
+   
     const std::string ARM = "yaskawa_arm";
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
 
@@ -203,7 +236,7 @@ int main(int argc, char** argv){
     else{
         
        
-    
+        obj_pose = uclv::sim_scene();
     //set real goal pose
 
     }
@@ -280,13 +313,10 @@ int main(int argc, char** argv){
                                             ROS_INFO_STREAM(std::get<1>(full_traj[i]));
                                             
                                             if(std::get<1>(full_traj[i]) != "")
-                                                uclv::move_gripper(gripper_width, simulation, joint_pub, std::get<1>(full_traj[i]));
+                                                uclv::move_gripper(gripper_width, simulation, joint_pub, std::get<1>(full_traj[i]), n);
                                             
                                         }
-                                        }
-
-                                       
-                                    
+                                    }     
                             }
                         }
                     
