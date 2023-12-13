@@ -2,6 +2,7 @@
 <launch>
 
 	<arg name="simulation_arg" default="true" />
+	<arg name="base_object_frame_name_arg" default="object_frame_" />
 	<arg name="trajectory_action_name_arg" default="/trajectory_action_server" />
 	<arg name="end_effector_frame_arg" default="ee_fingers" />
 	<arg name="pre_grasp_offset_arg" default="0.15"/>
@@ -11,25 +12,26 @@
 	<param name="trajectory_action_name" value="$(arg trajectory_action_name_arg)" type="string"/>
 	<param name="end_effector_frame_name" value="$(arg end_effector_frame_arg)" type="string"/>
 	<param name="pre_grasp_offset_name" value="$(arg pre_grasp_offset_arg)"/>
+	<param name="base_object_frame_name" value="$(arg base_object_frame_name_arg)" />
 	
+	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_1" args="0.4 0 0.05 0 0 0 base_link object_frame_0" if="$(arg simulation_arg)"/>
+	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_2" args="0.4 0.3 0.05 0 0 0 base_link object_frame_1" if="$(arg simulation_arg)"/>
 
-	<group>
-	<remap from="/joint_states" to="/gripper_joints"/>
-	<include file="$(find sun_wsg50_driver)/launch/wsg50_tcp_script.launch">
-		<arg name="gripper_ip" value="192.168.2.111"/>
-		
-	</include>
+	<group unless="$(arg simulation_arg)">
+		<remap from="/joint_states" to="/gripper_joints"/>
+		<include file="$(find sun_wsg50_driver)/launch/wsg50_tcp_script.launch">
+			<arg name="gripper_ip" value="192.168.2.111"/>
+		</include>
 	</group>
 
 
-
+	
 	<include file="$(find yaskawa_moveit_config)/launch/demo.launch">
 		<arg name="source_list" value="$(arg source_list_arg)" unless="$(arg simulation_arg)"/>
 	</include>
 	
 	
-
-	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen">
+	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server">
 		<remap from="/move_group/fake_controller_joint_states" to="/motoman/joint_ll_control" unless="$(arg simulation_arg)"/>
 	</node>
 	

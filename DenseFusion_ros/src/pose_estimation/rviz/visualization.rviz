@@ -493,6 +493,8 @@ Visualization Manager:
           Value: false
         link_u:
           Value: false
+        object_frame_0:
+          Value: false
         tactile_1:
           Value: false
         tactile_2:
@@ -553,6 +555,8 @@ Visualization Manager:
                                         {}
                             ee_fingers:
                               {}
+            object_frame_0:
+              {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -587,9 +591,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5
+      Pitch: 0.33499985933303833
       Target Frame: base_link
-      Yaw: -0.6232355833053589
+      Yaw: 6.07494592666626
     Saved: ~
 Window Geometry:
   Displays:

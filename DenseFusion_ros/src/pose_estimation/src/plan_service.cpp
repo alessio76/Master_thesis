@@ -6,7 +6,6 @@
 #include <pose_estimation/utils.h>
 #include "pose_estimation/plan_service.h"
 
-bool simulation;
 
 // The circle constant tau = 2*pi. One tau is one rotation in radians.
 namespace uclv{
@@ -88,7 +87,6 @@ int main(int argc, char** argv)
   {
     ros::init(argc, argv, "Planning_node");
     ros::NodeHandle n;
-    n.getParam("simulation",simulation);
     ros::ServiceServer service = n.advertiseService("plan_service", uclv::plan_service);
     ROS_INFO("Planning service up");
     ros::AsyncSpinner spinner(2); 

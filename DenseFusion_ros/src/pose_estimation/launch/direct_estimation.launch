@@ -32,7 +32,7 @@
     <arg name="min_pixel" default="200" /> 
     <param name="classes" textfile="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/data/santal_dataset/classes.txt" />
     <param name="tf_camera_frame" value="camera_color_optical_frame" />
-    <param name="base_object_frame_name" value="object_frame" />
+    <param name="base_object_frame_name" value="object_frame_" />
 
     <!-- spawn node -->
     <node name="estimation_node" pkg="pose_estimation" type="DenseFusion_node_real.py" respawn="true" output="screen">

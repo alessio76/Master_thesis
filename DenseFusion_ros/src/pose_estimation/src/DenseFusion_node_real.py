@@ -156,7 +156,7 @@ class ImageProcessor:
         transform_msg = TransformStamped()
         transform_msg.header.stamp = rospy.Time.now()  # Set the timestamp of the transform
         transform_msg.header.frame_id = camera_frame  # Set the parent frame ID
-        transform_msg.child_frame_id = self.base_object_frame_name + f'_{i}'  # Set the child frame ID
+        transform_msg.child_frame_id = self.base_object_frame_name + f'{i}'  # Set the child frame ID
         transform_msg.transform.translation.x = pred_t[0]  # Set the translation values (x, y, z)
         transform_msg.transform.translation.y = pred_t[1]
         transform_msg.transform.translation.z = pred_t[2]
