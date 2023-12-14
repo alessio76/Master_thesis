@@ -61,15 +61,15 @@ namespace uclv{
 
 
     if(req.planning_space == "joint"){
-
     //convert the tf2 structure into a geometry_msgs one since moveit wants a pose
-    move_group_interface.setPoseTarget(goal_pose);
+    move_group_interface.setJointValueTarget(req.goal_joint);
     success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
     trajectory = my_plan.trajectory_;
     }
 
     else if(req.planning_space == "cartesian"){
         std::vector<geometry_msgs::Pose> target_poses;
+
         target_poses.push_back(goal_pose);
         success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
     }
@@ -83,8 +83,7 @@ namespace uclv{
 
 }
 
-int main(int argc, char** argv)
-  {
+int main(int argc, char** argv){
     ros::init(argc, argv, "Planning_node");
     ros::NodeHandle n;
     ros::ServiceServer service = n.advertiseService("plan_service", uclv::plan_service);

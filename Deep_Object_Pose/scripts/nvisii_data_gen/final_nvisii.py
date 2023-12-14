@@ -71,8 +71,8 @@ opt.out = '01_simple_scene.png'
 cld=[]
 class_id=1
 
-base_path="models/santal_ace"
-input_file=open(os.path.join(base_path,"santal_ace.xyz"))
+base_path="models/apple_dataset_revisited"
+input_file=open(os.path.join(base_path,"apple.xyz"))
 
 x = []
 y = []
@@ -87,7 +87,7 @@ while 1:
 	y.append(float(input_line[1]))
 	z.append(float(input_line[2]))
 	cld.append([float(input_line[0]), float(input_line[1]), float(input_line[2])])
-cld = np.array(cld)/1000
+cld = np.array(cld)
 input_file.close()
 # headless - no window
 # verbose - output number of frames rendered, etc..
@@ -98,19 +98,18 @@ nvisii.enable_denoiser()
 
 camera=set_camera(fov,opt.width ,opt.height)
 
-mesh = nvisii.mesh.create_from_file("obj", os.path.join(base_path,"santal_centered.obj"))
-tex=nvisii.texture.create_from_file("rgb", os.path.join(base_path,"textures","material0_baseColor.png"))
+mesh = nvisii.mesh.create_from_file("obj", os.path.join(base_path,"red_apple.obj"))
+tex=nvisii.texture.create_from_file("rgb", os.path.join(base_path,"textures","food_apple_01_diff_8k.jpg"))
 nvisii.set_dome_light_intensity(1)
 
-dir=str(np.random.randint(199)).zfill(3)
+dir=str(np.random.randint(3)).zfill(3)
 print(dir)
-for i,file in enumerate(glob.glob(f"/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/train/{dir}/0*.json")):
+for i,file in enumerate(glob.glob(f"dataset/000/0*.json")):
 	json_file=open(file)
 	data=json.load(json_file)
 
-
 	for obj in data['objects']:
-		if 'santal' in obj['name']:
+		if 'apple' in obj['name']:
 			obj_pos=np.array(obj['location'])
 			obj_ori=np.array(obj['quaternion_xyzw'])
 

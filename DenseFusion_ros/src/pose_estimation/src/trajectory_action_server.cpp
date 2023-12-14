@@ -22,9 +22,9 @@ namespace uclv
       ros::Publisher joint_pub;
       bool success=true;
       double rate=50;
-      float scale_factor=1.0;
+      float scale_factor=5.0;
       std::string result_string;
-      bool simulation=false;
+      
 
 
     public:
@@ -34,7 +34,6 @@ namespace uclv
       action_name_(name)
       {
         joint_pub = nh_.advertise<sensor_msgs::JointState>(topic_name, 1);
-        nh_.getParam("simulation",this->simulation);
         as_.start();
       }
 

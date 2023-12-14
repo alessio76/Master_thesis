@@ -158,6 +158,7 @@ include_directories(
  add_executable(plan_demo src/plan_demo.cpp)
  add_executable(plan_node src/plan_service.cpp)
  add_executable(main_node src/main_node.cpp)
+ add_executable(test_node src/simple_movement.cpp)
  add_executable(trajectory_action_server src/trajectory_action_server.cpp)
  add_executable(pre_grasp_selection_node src/pre_grasp_selection_server.cpp)
 
@@ -175,6 +176,7 @@ include_directories(
  target_link_libraries(plan_demo ${catkin_LIBRARIES})
  target_link_libraries(plan_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
+ target_link_libraries(test_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
  target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES} pre_grasp_policies)
 

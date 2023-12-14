@@ -1,4 +1,5 @@
 geometry_msgs/TransformStamped goal_transform
+float64[] goal_joint 
 string planning_group
 string planning_space
 float64[] start_state

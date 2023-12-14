@@ -439,8 +439,9 @@ else:
     for i_obj in range(int(opt.nb_objects)):
         toy_to_load = google_content_folder[random.randint(0, len(google_content_folder) - 1)]
 
-        obj_to_load = toy_to_load + "santal_centered.obj"
-        texture_to_load = toy_to_load + "textures/material0_baseColor.png"
+        #TODO: make the obj name customizable and also the texture file name
+        obj_to_load = toy_to_load + "red_apple.obj"
+        texture_to_load = toy_to_load + "textures/food_apple_01_diff_8k.jpg"
         model_info_path = toy_to_load + "/google_16k/model_info.json"
         name = "hope_" + toy_to_load.split('/')[-2] + f"_{i_obj}"
 

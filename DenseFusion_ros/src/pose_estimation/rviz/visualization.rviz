@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /MotionPlanning1
         - /MotionPlanning1/Planning Request1
+        - /MotionPlanning1/Planned Path1
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.5
@@ -223,7 +224,7 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-        Loop Animation: true
+        Loop Animation: false
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
         Show Robot Collision: false
@@ -495,6 +496,8 @@ Visualization Manager:
           Value: false
         object_frame_0:
           Value: false
+        object_frame_1:
+          Value: true
         tactile_1:
           Value: false
         tactile_2:
@@ -557,6 +560,8 @@ Visualization Manager:
                               {}
             object_frame_0:
               {}
+            object_frame_1:
+              {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -591,9 +596,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.33499985933303833
+      Pitch: 0.2649998068809509
       Target Frame: base_link
-      Yaw: 6.07494592666626
+      Yaw: 4.6399407386779785
     Saved: ~
 Window Geometry:
   Displays:

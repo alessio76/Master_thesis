@@ -71,53 +71,42 @@ namespace uclv{
         int i=0;
         std::vector<Eigen::Isometry3f> santal_transforms;
 
-        if(simulation){
             
-            out << object_frame_name << i;
-            while(tfBuffer.canTransform("base_link", out.str(), ros::Time::now(),ros::Duration(3))){
-                ROS_INFO_STREAM(out.str());
-                //gives the pose for the second frame in the first coordinate system 
-                geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform("base_link", out.str(), ros::Time(0), ros::Duration(10.0));
-                geometry_msgs::Pose santal_pose;
-                santal_pose.orientation.w = transformStamped.transform.rotation.w;
-                santal_pose.orientation.x = transformStamped.transform.rotation.x;
-                santal_pose.orientation.y = transformStamped.transform.rotation.y;
-                santal_pose.orientation.z = transformStamped.transform.rotation.z;
+        out << object_frame_name << i;
+        while(tfBuffer.canTransform("base_link", out.str(), ros::Time::now(),ros::Duration(3))){
+            //gives the pose for the second frame in the first coordinate system 
+            geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform("base_link", out.str(), ros::Time(0), ros::Duration(10.0));
+            geometry_msgs::Pose santal_pose;
+            santal_pose.orientation.w = transformStamped.transform.rotation.w;
+            santal_pose.orientation.x = transformStamped.transform.rotation.x;
+            santal_pose.orientation.y = transformStamped.transform.rotation.y;
+            santal_pose.orientation.z = transformStamped.transform.rotation.z;
 
-                santal_pose.position.x = transformStamped.transform.translation.x;
-                santal_pose.position.y = transformStamped.transform.translation.y;
-                santal_pose.position.z = transformStamped.transform.translation.z;
-                /*Eigen::Isometry3f obj_pose(Eigen::Translation3f(0.4, 0, 0.03) * Eigen::Quaternionf(Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX())));
-                geometry_msgs::Pose santal_pose=uclv::eigen_to_Pose(obj_pose.translation(), Eigen::Quaternionf(obj_pose.rotation()));*/
-                Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);
-                Eigen::Quaternionf santal_ori(santal_pose.orientation.w, santal_pose.orientation.x, santal_pose.orientation.y, santal_pose.orientation.z);
-                santal_transforms.push_back(Eigen::Isometry3f(Eigen::Translation3f(santal_position) * Eigen::Quaternionf(santal_ori)));
+            santal_pose.position.x = transformStamped.transform.translation.x;
+            santal_pose.position.y = transformStamped.transform.translation.y;
+            santal_pose.position.z = transformStamped.transform.translation.z;
+            /*Eigen::Isometry3f obj_pose(Eigen::Translation3f(0.4, 0, 0.03) * Eigen::Quaternionf(Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX())));
+            geometry_msgs::Pose santal_pose=uclv::eigen_to_Pose(obj_pose.translation(), Eigen::Quaternionf(obj_pose.rotation()));*/
+            Eigen::Vector3f santal_position(santal_pose.position.x, santal_pose.position.y, santal_pose.position.z);
+            Eigen::Quaternionf santal_ori(santal_pose.orientation.w, santal_pose.orientation.x, santal_pose.orientation.y, santal_pose.orientation.z);
+            santal_transforms.push_back(Eigen::Isometry3f(Eigen::Translation3f(santal_position) * Eigen::Quaternionf(santal_ori)));
 
-                moveit_msgs::CollisionObject object_to_attach;
-                object_to_attach.id = out.str();
-                 
-                object_to_attach.header.frame_id = "base_link";
-                object_to_attach.meshes.push_back(mesh);
-                object_to_attach.mesh_poses.push_back(santal_pose);
-
-                object_to_attach.operation = object_to_attach.ADD;
-                collision_objects.push_back(object_to_attach);
-                i++;
-                out.str("");
-                out.clear();
-                out << object_frame_name << i;
+            moveit_msgs::CollisionObject object_to_attach;
+            object_to_attach.id = out.str();
                 
-            }
+            object_to_attach.header.frame_id = "base_link";
+            object_to_attach.meshes.push_back(mesh);
+            object_to_attach.mesh_poses.push_back(santal_pose);
+
+            object_to_attach.operation = object_to_attach.ADD;
+            collision_objects.push_back(object_to_attach);
+            i++;
+            out.str("");
+            out.clear();
+            out << object_frame_name << i;
             
         }
-
-        else{
-            
-
-
-
-        }
-
+        
         planning_scene_interface.addCollisionObjects(collision_objects);
         return santal_transforms;
         
@@ -126,8 +115,6 @@ namespace uclv{
     Eigen::Isometry3f set_grasp_pose(const Eigen::Isometry3f& pre_grasp_pose, float pre_grasp_offset){
         
         Eigen::Isometry3f pre_grasp_to_grasp = Eigen::Isometry3f(Eigen::Translation3f(Eigen::Vector3f::UnitZ() * pre_grasp_offset));
-                                                               
-
         Eigen::Isometry3f grasp_pose = pre_grasp_pose * pre_grasp_to_grasp;
         return grasp_pose;
     }
@@ -135,7 +122,7 @@ namespace uclv{
 
 
     bool call_plan_service(std::vector<std::tuple<moveit_msgs::RobotTrajectory, std::string, std::string>>& full_traj, const Eigen::Isometry3f& target_pose,
-                        pose_estimation::plan_service& plan_service, const std::string& planning_space, const std::string& planning_group, 
+                        pose_estimation::plan_service& plan_service, const std::string& planning_space, const std::string& planning_group,const std::vector<double>& start_state, 
                         tf2_ros::StaticTransformBroadcaster& static_broadcaster, ros::ServiceClient& plan_client, const std::string& attach_obj_id="",
                         const std::string& move_gripper=""){
         
@@ -148,7 +135,10 @@ namespace uclv{
         plan_service.request.planning_space = planning_space;
         plan_service.request.planning_group = planning_group;
         plan_service.request.attach_obj_id = attach_obj_id;
-        plan_service.request.start_state = std::get<0>(full_traj[full_traj.size()-1]).joint_trajectory.points.back().positions;
+        if(start_state.size() <=0)
+            plan_service.request.start_state = std::get<0>(full_traj[full_traj.size()-1]).joint_trajectory.points.back().positions;
+        else
+            plan_service.request.start_state = start_state;
         
         if (plan_client.call(plan_service)){   
             ROS_INFO_STREAM("Calling planning server");
@@ -248,13 +238,13 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "main_node");
     ros::NodeHandle n;
     bool simulation;
+    std::vector<double> start_state;
     n.getParam("simulation",simulation);
     std::string object_frame_name;
     n.getParam("base_object_frame_name",object_frame_name);
     const std::string topic_name="gripper_joints";
     ros::Publisher joint_pub = n.advertise<sensor_msgs::JointState>(topic_name, 1);
     ros::ServiceClient pre_grasp_client = n.serviceClient<pose_estimation::pre_grasp_service>("pre_grasp_service");
-    
    
     ros::ServiceClient plan_client = n.serviceClient<pose_estimation::plan_service>("plan_service");
     pose_estimation::plan_service plan_service;
@@ -293,14 +283,13 @@ int main(int argc, char** argv){
     Eigen::Isometry3f place_pose;
     Eigen::Isometry3f post_place_pose;
 
-    //if simulation is true build a fake scene
-    //otherwise use the real goal pose
     //54mm most long side
     //upright 35mm
     //12mm shortest side
-    //192.168.2.111 wsg IP 
+    //192.168.2.111 wsg IP   
+
     obj_pose = uclv::build_scene(static_broadcaster, simulation, object_frame_name);
-    
+   
     for(int j=0; j < obj_pose.size(); j++){
         
         std::ostringstream out;
@@ -329,25 +318,24 @@ int main(int argc, char** argv){
                 pre_grasp_pose = Eigen::Isometry3f(pre_grasp_trans * pre_grasp_rot);
                 grasp_pose = uclv::set_grasp_pose(pre_grasp_pose, pre_grasp_offset);
                 //uclv::askContinue("Calling Grasp plan");
-            
-                if(uclv::call_plan_service(full_traj, grasp_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, "", "close")){
-                    
+               
+                if(uclv::call_plan_service(full_traj, grasp_pose, plan_service, "cartesian", ARM, start_state, static_broadcaster, plan_client, "", "close")){
                     //uclv::askContinue("Calling attach object and post grasp plan");
                     post_grasp_pose = pre_grasp_pose;
-
-                    if(uclv::call_plan_service(full_traj, post_grasp_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, out.str())){
+                  
+                    if(uclv::call_plan_service(full_traj, post_grasp_pose, plan_service, "cartesian", ARM, start_state, static_broadcaster, plan_client, out.str())){
                         pre_place_pose = post_grasp_pose * Eigen::Isometry3f(Eigen::Translation3f(0, 0.2,0) * Eigen::Quaternionf(1,0,0,0));
                         //uclv::askContinue("Calling pre_place plan");
 
-                        if(uclv::call_plan_service(full_traj, pre_place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, out.str())){
+                        if(uclv::call_plan_service(full_traj, pre_place_pose, plan_service, "cartesian", ARM, start_state, static_broadcaster, plan_client, out.str())){
                             place_pose = pre_place_pose * Eigen::Isometry3f(Eigen::Translation3f(Eigen::Vector3f::UnitZ() * 0.15));
                             ///uclv::askContinue("Calling place plan");
 
-                            if(uclv::call_plan_service(full_traj, place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client, out.str(), "open")){
+                            if(uclv::call_plan_service(full_traj, place_pose, plan_service, "cartesian", ARM, start_state, static_broadcaster, plan_client, out.str(), "open")){
                                 post_place_pose=pre_place_pose;
                                 ///uclv::askContinue("Calling post_place plan");
 
-                                if(uclv::call_plan_service(full_traj, post_place_pose, plan_service, "cartesian", ARM, static_broadcaster, plan_client)){
+                                if(uclv::call_plan_service(full_traj, post_place_pose, plan_service, "cartesian", ARM, start_state, static_broadcaster, plan_client)){
                                     /****PLANNING*****/
 
                                     /****EXECUTION****/

@@ -14,7 +14,8 @@
     <arg name="segmentation_topic" default="/camera/color/segmentation_result" />
     <arg name="mask_topic" default="/camera/mask_result" />
     <arg name="mask_image_topic" default="/camera/mask_image" />
-    <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" />
+    <!-- <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" /> -->
+    <param name="depth_topic_name" value="/camera/depth/image_rect_raw" />
 
     <!-- parameters to commond use -->
     <param name="image_topic_name" value="$(arg image_topic)" />
@@ -45,12 +46,12 @@
         <param name="display_text" value="True" />
         <param name="display_scores" value="True" />
         <param name="display_crop" value="True" />
-        <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" />
-        
+        <!-- <param name="yolact_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/yolact/weights/santal_51_270000.pth" /> -->
+        <param name="yolact_model" value="/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/yolact/weigths/santal_36_320000.pth" />
         <!-- Pose estimation paremeters -->
         <param name="refine" value="$(arg refine)" />
-        <param name="pose_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_model_38_0.008200949688499323.pth" />
-        <param name="pose_refine_model" value="/home/workstation2/AlessioBenitoAlterani/Master-thesis/DenseFusion/trained_models/santal_dataset/pose_refine_model_113_0.003690717733536428.pth" />
+        <param name="pose_model" value="/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/DenseFusion/santal_dataset/pose_model_38_0.008200949688499323.pth" />
+        <param name="pose_refine_model" value="/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/DenseFusion/santal_dataset/pose_refine_model_113_0.003690717733536428.pth" />
         
         <!-- Camera parameters -->
         <param name="cx" value="317.7075500488281" />

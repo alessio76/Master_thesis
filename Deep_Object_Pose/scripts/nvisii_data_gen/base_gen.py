@@ -56,7 +56,15 @@ parser.add_argument(
     help='If you have a single obj file, path to the obj directly.'
 )
 parser.add_argument(
-    '--scale',
+    '--obj_scale',
+    default=1,
+    type=float,
+    help='Specify the scale of the target object(s). If the obj mesh is in '
+         'meters -> scale=1; if it is in cm -> scale=0.01.'
+)
+
+parser.add_argument(
+    '--distractors_scale',
     default=1,
     type=float,
     help='Specify the scale of the target object(s). If the obj mesh is in '
@@ -274,6 +282,7 @@ def adding_mesh_object(
         scale=1, 
         debug=False
     ):
+
     global mesh_loaded, visii_pybullet, names_to_export
     # obj_to_load = toy_to_load + "/meshes/model.obj"
     # texture_to_load = toy_to_load + "/materials/textures/texture.png"
@@ -337,8 +346,8 @@ def adding_mesh_object(
     toy_transform.set_position(
         visii.vec3(
             random.uniform(0.1, 1),
-            random.uniform(-1, 1)/6,
-            random.uniform(-1, 1)/6,
+            random.uniform(-1, 1)/4,
+            random.uniform(-1, 1)/4,
         )
     )
     
@@ -411,23 +420,23 @@ for i_obj in range(int(opt.nb_distractors)):
     texture_to_load = toy_to_load + "/materials/textures/texture.png"
     name = "google_"+toy_to_load.split('/')[-2] + f"_{i_obj}"
 
-    adding_mesh_object(name, obj_to_load, texture_to_load, debug=opt.debug)
+    adding_mesh_object(name, obj_to_load, texture_to_load, debug=opt.debug, scale=opt.distractors_scale)
 
 
 else:
     google_content_folder = glob.glob(opt.objs_folder + "*/")
-
+   
     for i_obj in range(int(opt.nb_objects)):
        
         toy_to_load = google_content_folder[random.randint(0, len(google_content_folder) - 1)]
-
-        obj_to_load = toy_to_load + "santal_centered.obj"
-        texture_to_load = toy_to_load + "textures/material0_baseColor.png"
+        mesh_file = glob.glob(toy_to_load + "*.obj")
+        obj_to_load =mesh_file[0]
+        texture_name = "food_apple_01_diff_8k.jpg"
+        texture_to_load = toy_to_load + f"textures/{texture_name}"
         model_info_path = toy_to_load + "/google_16k/model_info.json"
         name = "hope_" + toy_to_load.split('/')[-2] + f"_{i_obj}"
-        
 	   
-        adding_mesh_object(name, obj_to_load, texture_to_load, model_info_path, scale=opt.scale, debug=opt.debug)
+        adding_mesh_object(name, obj_to_load, texture_to_load, model_info_path,  scale=opt.obj_scale, debug=opt.debug)
 
 
 
