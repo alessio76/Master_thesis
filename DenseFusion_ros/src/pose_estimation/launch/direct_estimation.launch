@@ -14,8 +14,8 @@
     <arg name="segmentation_topic" default="/camera/color/segmentation_result" />
     <arg name="mask_topic" default="/camera/mask_result" />
     <arg name="mask_image_topic" default="/camera/mask_image" />
-    <!-- <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" /> -->
-    <param name="depth_topic_name" value="/camera/depth/image_rect_raw" />
+    <param name="depth_topic_name" value="/camera/aligned_depth_to_color/image_raw" />
+    
 
     <!-- parameters to commond use -->
     <param name="image_topic_name" value="$(arg image_topic)" />

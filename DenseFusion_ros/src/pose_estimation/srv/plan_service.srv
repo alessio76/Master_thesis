@@ -1,7 +1,7 @@
 geometry_msgs/TransformStamped goal_transform
 float64[] goal_joint 
 string planning_group
-string planning_space
+string planning_type
 float64[] start_state
 string attach_obj_id
 ---

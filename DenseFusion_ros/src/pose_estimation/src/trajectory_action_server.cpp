@@ -24,8 +24,6 @@ namespace uclv
       double rate=50;
       float scale_factor=5.0;
       std::string result_string;
-      
-
 
     public:
 

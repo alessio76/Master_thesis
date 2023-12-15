@@ -22,7 +22,7 @@ class PreGraspPolicies{
         moveit::planning_interface::MoveGroupInterface move_group_interface;
         //gripper widths in mm, along object axis. They represent the distance between the fingers
         //must be divided by 2 if used in simulation
-        std::map<std::string, float> gripper_widths{{"on_x",54},{"on_y",35},{"on_z",12}};
+        std::map<std::string, float> gripper_widths{{"on_x",54},{"on_y",34},{"on_z",12}};
         
         void visualize_frames(const Eigen::Isometry3f& pre_grasp, int i, int j);
         float gripper_width_selection(const Eigen::Matrix3f& pre_grasp_rot, const Eigen::Matrix3f& obj_rot);

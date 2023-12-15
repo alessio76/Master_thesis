@@ -60,14 +60,14 @@ namespace uclv{
       move_group_interface.attachObject(req.attach_obj_id, "ee_fingers", { "tactile_1", "tactile_2" });
 
 
-    if(req.planning_space == "joint"){
+    if(req.planning_type == "joint"){
     //convert the tf2 structure into a geometry_msgs one since moveit wants a pose
     move_group_interface.setJointValueTarget(req.goal_joint);
     success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
     trajectory = my_plan.trajectory_;
     }
 
-    else if(req.planning_space == "cartesian"){
+    else if(req.planning_type == "cartesian"){
         std::vector<geometry_msgs::Pose> target_poses;
 
         target_poses.push_back(goal_pose);
