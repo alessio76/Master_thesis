@@ -11,6 +11,9 @@ class PreGraspPolicies{
     private:
         bool success = false;
         std::ostringstream out;
+        std::string end_effector_frame_name;
+        std::string goal_frame_name;
+        std::string base_frame_name;
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
         pose_estimation::pre_grasp_service::Response out_res;
         uclv::PreGraspBasePoses BaseObjPoses;
@@ -22,14 +25,14 @@ class PreGraspPolicies{
         moveit::planning_interface::MoveGroupInterface move_group_interface;
         //gripper widths in mm, along object axis. They represent the distance between the fingers
         //must be divided by 2 if used in simulation
-        std::map<std::string, float> gripper_widths{{"on_x",54},{"on_y",34},{"on_z",12}};
-        
+        std::map<std::string, float> gripper_widths;
+        float desidered_force;
         void visualize_frames(const Eigen::Isometry3f& pre_grasp, int i, int j);
         float gripper_width_selection(const Eigen::Matrix3f& pre_grasp_rot, const Eigen::Matrix3f& obj_rot);
 
     public:
 
-        PreGraspPolicies(float pre_grasp_offset, const std::string& move_group, bool debug);
+        PreGraspPolicies(float pre_grasp_offset, const std::string& move_group, bool debug, float on_x, float on_y, float on_z, float desidered_force, const std::string& end_effector_frame_name, const std::string& goal_frame_name, const std::string& base_frame_name);
 
         /*
         This function simply generates all the pregrasp poses and gives as result the first feasible

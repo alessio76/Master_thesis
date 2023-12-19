@@ -11,12 +11,13 @@
 
 namespace uclv{
 
-    Eigen::Isometry3f link_t_goal_pose(const tf2_ros::Buffer& tfBuffer, const Eigen::Vector3f& base_to_goal_vec3, const Eigen::Quaternionf& base_to_goal_quat ){
 
-        tfBuffer.canTransform("ee_fingers", "link_t", ros::Time::now(),ros::Duration(3));
+    Eigen::Isometry3f link_t_goal_pose(const tf2_ros::Buffer& tfBuffer, const Eigen::Vector3f& base_to_goal_vec3, const Eigen::Quaternionf& base_to_goal_quat, const std::string& end_effector_frame_name){
+
+        tfBuffer.canTransform(end_effector_frame_name, "link_t", ros::Time::now(),ros::Duration(3));
 
         //gives the pose for the second frame in the first coordinate system 
-        geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform("link_t", "ee_fingers", ros::Time(0), ros::Duration(10.0));
+        geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform("link_t", end_effector_frame_name, ros::Time(0), ros::Duration(10.0));
         Eigen::Quaternionf link_t_to_grasp_quat(transformStamped.transform.rotation.w,
                                 transformStamped.transform.rotation.x,
                                 transformStamped.transform.rotation.y,
@@ -33,7 +34,7 @@ namespace uclv{
 
     }
 
-    geometry_msgs::Pose eigen_to_Pose(Eigen::Vector3f&& position, Eigen::Quaternionf&& quaternion){
+    geometry_msgs::Pose eigen_to_Pose(const Eigen::Vector3f& position, const Eigen::Quaternionf& quaternion){
 
         geometry_msgs::Pose target_pose;
         target_pose.orientation.w = quaternion.w();
@@ -50,7 +51,7 @@ namespace uclv{
 
   }
 
-    geometry_msgs::TransformStamped eigen_to_TransformedStamped(std::string&& base_frame,std::string&& child_frame, const Eigen::Vector3f& position, const Eigen::Quaternionf& quaternion){
+    geometry_msgs::TransformStamped eigen_to_TransformedStamped(const std::string& base_frame, const std::string& child_frame, const Eigen::Vector3f& position, const Eigen::Quaternionf& quaternion){
         geometry_msgs::TransformStamped goal_pose;
         goal_pose.header.stamp = ros::Time::now();
         goal_pose.header.frame_id = base_frame;

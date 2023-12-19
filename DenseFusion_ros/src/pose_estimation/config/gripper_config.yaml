@@ -1,0 +1,15 @@
+#
+gripper_widths:
+  on_x: 54
+  on_y: 34
+  on_z: 12
+  
+#force in N
+desidered_force: 10.0
+
+#speed in mm/s
+gripper_requested_speed: 50.0
+
+#width in mm
+max_gripper_width: 68.0
+

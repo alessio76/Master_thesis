@@ -47,7 +47,7 @@ namespace uclv{
 
         else if(plan_service.request.planning_type == "joint"){
            ROS_INFO_STREAM("joint");
-            goal_joint= std::vector<double>{0.7529263496398926, 0.24619631469249725, -2.463223695755005, -0.03696741536259651, -0.14155149459838867, -1.6968756914138794, 0.24923288822174072};
+            goal_joint= std::vector<double>{1.062881588935852, 0.48769956827163696, -2.498535633087158, -0.06272614002227783, -0.3274517357349396, -1.6770890951156616, -0.13831827044487};
             plan_service.request.goal_joint = goal_joint;
         }
 
@@ -115,6 +115,8 @@ int main(int argc, char** argv){
     std::string object_frame_name;
     n.getParam("base_object_frame_name",object_frame_name);
     const std::string topic_name="gripper_joints";
+    std::vector<double> home_state;
+    n.getParam("home_state", home_state);
     ros::Publisher joint_pub = n.advertise<sensor_msgs::JointState>(topic_name, 1);
     ros::ServiceClient pre_grasp_client = n.serviceClient<pose_estimation::pre_grasp_service>("pre_grasp_service");
     ros::Publisher jointStatePublisher = n.advertise<sensor_msgs::JointState>("/move_group/fake_controller_joint_states", 10);
