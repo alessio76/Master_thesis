@@ -156,6 +156,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(plan_node src/plan_service.cpp)
+ add_executable(gripper_adapter_node src/gripper_adapter.cpp)
  add_executable(main_node src/main_node.cpp)
  add_executable(test_node src/simple_movement.cpp)
  add_executable(trajectory_action_server src/trajectory_action_server.cpp)
@@ -173,6 +174,7 @@ include_directories(
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(plan_node ${catkin_LIBRARIES})
+ target_link_libraries(gripper_adapter_node ${catkin_LIBRARIES})
  target_link_libraries(main_node ${catkin_LIBRARIES})
  target_link_libraries(test_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})

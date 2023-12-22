@@ -61,18 +61,29 @@ namespace uclv{
     moveit::core::RobotState start_state(*move_group_interface.getCurrentState());
     start_state.setJointGroupPositions(req.planning_group, req.start_state);
     move_group_interface.setStartState(start_state);
-
-    if(req.planning_type == "joint"){
+   
+    if(req.planning_type == "joint" && req.goal_joint.size() >0){
     //convert the tf2 structure into a geometry_msgs one since moveit wants a pose
-    move_group_interface.setJointValueTarget(req.goal_joint);
-    success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-    trajectory = my_plan.trajectory_;
+      move_group_interface.setJointValueTarget(req.goal_joint);
+      success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+      trajectory = my_plan.trajectory_;
+    }
+
+    else if(req.planning_type == "joint" && req.goal_joint.size() == 0){
+      move_group_interface.setPoseTarget(goal_pose);
+      success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+      trajectory=my_plan.trajectory_;
+
     }
 
     else if(req.planning_type == "cartesian"){
-        std::vector<geometry_msgs::Pose> target_poses;
-        target_poses.push_back(goal_pose);
-        success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
+      /*geometry_msgs::PoseStamped inital_pose = move_group_interface.getCurrentPose();
+      Eigen::Vector3f initial_pos(inital_pose.pose.position.x, inital_pose.pose.position.y, inital_pose.pose.position.z);
+      Eigen::Quaternionf initial_quat(inital_pose.pose.orientation.w, inital_pose.pose.orientation.x, inital_pose.pose.orientation.y, inital_pose.pose.orientation.z);
+      std::vector<geometry_msgs::Pose> target_poses = get_linear_path(base_to_t, 10, initial_pos, initial_quat);*/
+      std::vector<geometry_msgs::Pose> target_poses;
+      target_poses.push_back(goal_pose);
+      success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
     }
     
     res.success=success;

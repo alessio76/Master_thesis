@@ -28,7 +28,7 @@ std::string goal_frame_name;
 //base frame
 std::string base_frame_name;
 namespace uclv{
-  
+
 
   bool pre_grasp_service(pose_estimation::pre_grasp_service::Request& req, pose_estimation::pre_grasp_service::Response& res){
 
@@ -36,7 +36,7 @@ namespace uclv{
     
     bool debug=false;
     uclv::PreGraspPolicies grasp_function_selector(pre_grasp_offset, req.planning_group, debug, on_x, on_y, on_z, desidered_force, 
-                                                   end_effector_frame_name, goal_frame_name, base_frame_name);
+                                                   end_effector_frame_name, goal_frame_name, base_frame_name, req.start_state);
     
     Eigen::Quaternionf obj_quat( req.object_pose.transform.rotation.w, 
                                  req.object_pose.transform.rotation.x, 
@@ -64,7 +64,7 @@ int main(int argc, char** argv){
     n.getParam("desidered_force", desidered_force);
     n.getParam("end_effector_frame_name", end_effector_frame_name);
     n.getParam("goal_frame_name", goal_frame_name);
-     n.getParam("base_frame_name", base_frame_name);
+    n.getParam("base_frame_name", base_frame_name);
     ros::ServiceServer service = n.advertiseService("pre_grasp_service", uclv::pre_grasp_service);
     ROS_INFO("Pre_grasp service up");
     ros::AsyncSpinner spinner(2); 

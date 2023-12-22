@@ -1,9 +1,10 @@
 #include "pose_estimation/pre_grasp_policies.h"
+#include "pose_estimation/utils.h"
 
 namespace uclv{
     	bool cartesian_path_planner(moveit_msgs::RobotTrajectory &trajectory, std::vector<geometry_msgs::Pose> &target_poses, moveit::planning_interface::MoveGroupInterface& move_group){
 
-    const double jump_threshold = 0.0;
+    const double jump_threshold = 0;
     const double eef_step = 0.01;
     double fraction = move_group.computeCartesianPath(target_poses, eef_step, jump_threshold, trajectory);
     if (fraction == 1){
@@ -60,7 +61,7 @@ namespace uclv{
 
     PreGraspPolicies::PreGraspPolicies(float pre_grasp_offset, const std::string& move_group, bool debug, float on_x, float on_y, float on_z, 
                                        float desidered_force, const std::string& end_effector_frame_name, const std::string& goal_frame_name,
-                                       const std::string& base_frame_name) : 
+                                       const std::string& base_frame_name, const std::vector<double>& start_joints) : 
     BaseObjPoses(pre_grasp_offset),
     move_group_interface(move_group),
     tfListener(tfBuffer),
@@ -71,6 +72,13 @@ namespace uclv{
     base_frame_name(base_frame_name){
 
         this->move_group_interface.setPlanningTime(1);
+
+        if(start_joints.size()>0){
+            moveit::core::RobotState start_state(*move_group_interface.getCurrentState());
+            start_state.setJointGroupPositions(move_group, start_joints);
+            move_group_interface.setStartState(start_state);
+        }
+
         this-> gripper_widths["on_x"] = on_x;
         this-> gripper_widths["on_y"] = on_y;
         this-> gripper_widths["on_z"] = on_z;
@@ -148,16 +156,15 @@ namespace uclv{
         
         float calculated_gripper_width;
         
-        //generate all pregraso pose
+        //generate all pregrasp pose
         for(int i=0; i < uclv::PreGraspBasePoses::N_BASE_FRAMES;i++){
             for(int j=0; j < uclv::PreGraspBasePoses::N_GRIPPER_ROTATIONS;j++){
                 //transform the candidate pose to base frame
                 Eigen::Isometry3f pre_grasp = obj_pose_world_frame * BaseObjPoses.pre_grasp_base_poses_obj_frame[i] * Eigen::AngleAxisf((M_PI*j)/2, Eigen::Vector3f::UnitZ()); 
                 float dist = (Eigen::Vector3f(pre_grasp.translation()) - end_effector_pos).norm();
                 float ang_dist = Eigen::AngleAxisf(end_effector_quat.toRotationMatrix().transpose() * pre_grasp.rotation()).angle();
-
                 //associate each pregrasp pose with a score (the mixed angular-linear distance)
-                scored_pregrasp[dist+ang_dist/10.0] = pre_grasp;
+                scored_pregrasp[dist+ang_dist/10] = pre_grasp;
             
                 if(debug)
                     visualize_frames(pre_grasp, i, j);
@@ -167,15 +174,31 @@ namespace uclv{
 
         //since std::map sorts in ascending order by defaults, the first feasible pregrasp pose is also the best (the one at minimun angular-linear distance)
         auto it = scored_pregrasp.begin();
-        while (it != scored_pregrasp.end() && !success) {
+
+        while (it != scored_pregrasp.end() && !success){
+
+            /*Eigen::Isometry3f pre_grasp = it->second;
+            std::vector<Eigen::Isometry3f> target_poses = uclv::get_linear_path(pre_grasp, 10, end_effector_pos, end_effector_quat);
+            std::vector<geometry_msgs::Pose> base_to_t_poses;
+
+            for(int i=0; i<target_poses.size(); i++){
+                Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, target_poses[i].translation(), Eigen::Quaternionf(target_poses[i].rotation()), end_effector_frame_name);
+                base_to_t_poses.push_back(uclv::eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation())));
+            }
+
+            success = cartesian_path_planner(trajectory, base_to_t_poses, move_group_interface);*/
+
             Eigen::Isometry3f pre_grasp = it->second;
             Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()), end_effector_frame_name);
             geometry_msgs::Pose plan_pose = uclv::eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation()));
-            //move_group_interface.setPoseTarget(plan_pose);
-            move_group_interface.setPlannerId("RRTStar");
             std::vector<geometry_msgs::Pose> target_poses;
             target_poses.push_back(plan_pose);
             success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
+
+            /*move_group_interface.setPoseTarget(plan_pose);
+            move_group_interface.setPlannerId("LazyPRMstar");
+            success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+            trajectory=my_plan.trajectory_;*/
             
             if(success){
                 pre_grasp_pose = uclv::eigen_to_TransformedStamped(base_frame_name, goal_frame_name, pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));

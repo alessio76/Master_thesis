@@ -32,7 +32,8 @@ class PreGraspPolicies{
 
     public:
 
-        PreGraspPolicies(float pre_grasp_offset, const std::string& move_group, bool debug, float on_x, float on_y, float on_z, float desidered_force, const std::string& end_effector_frame_name, const std::string& goal_frame_name, const std::string& base_frame_name);
+        PreGraspPolicies(float pre_grasp_offset, const std::string& move_group, bool debug, float on_x, float on_y, float on_z, float desidered_force, const std::string& end_effector_frame_name, const std::string& goal_frame_name, const std::string& base_frame_name,
+        const std::vector<double>& start_joints);
 
         /*
         This function simply generates all the pregrasp poses and gives as result the first feasible

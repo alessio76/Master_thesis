@@ -9,8 +9,10 @@
 	<arg name="source_list_arg" default="[/motoman/joint_states, gripper_joints]"/>
 	<arg name="goal_frame_arg" default="goal_pose"/>
 	<arg name="base_frame_arg" default="base_link"/>
-	<arg name="max_planning_time_arg" default="60.0"/>
-	<arg name="planner_id_arg" default="RRTStart"/>
+	<arg name="max_planning_time_arg" default="1.0"/>
+	<arg name="planner_id_arg" default="RRTconnect"/>
+	<arg name="remapped_gripper_topic_arg" default="/fake_gripper_joints"/>
+	<arg name="dest_gripper_topic_arg" default="/gripper_joints"/>
 
 	<param name="simulation" value="$(arg simulation_arg)" type="bool"/>
 	<param name="trajectory_action_name" value="$(arg trajectory_action_name_arg)" type="string"/>
@@ -21,16 +23,19 @@
 	<param name="base_frame_name" value="$(arg base_frame_arg)" />
 	<param name="max_planning_time" value="$(arg max_planning_time_arg)" />
 	<param name="planner_id" value="$(arg planner_id_arg)"/>
+	<param name="remapped_gripper_topic" value="$(arg remapped_gripper_topic_arg)"/>
+	<param name="dest_gripper_topic" value="$(arg dest_gripper_topic_arg)"/>
 
 	<rosparam command="load" file="$(find pose_estimation)/config/gripper_config.yaml" />
 	<rosparam command="load" file="$(find pose_estimation)/config/robot_config.yaml" />
 	
 	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_1" args="0.4 0 0.05 0 0 0 base_link object_frame_0" if="$(arg simulation_arg)"/>
-	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_2" args="0.4 0.3 0.05 0 0 0 base_link object_frame_1" if="$(arg simulation_arg)"/>
+	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_2" args="0.4 0.1 0.05 0 0 0 base_link object_frame_1" if="$(arg simulation_arg)"/>
 
-	
+	<node name="gripper_adapter_node" pkg="pose_estimation" type="gripper_adapter_node" output="screen"/>
+
 	<group unless="$(arg simulation_arg)">
-		<remap from="/joint_states" to="/gripper_joints"/>
+		<remap from="/joint_states" to="$(arg remapped_gripper_topic_arg)"/>
 		<include file="$(find sun_wsg50_driver)/launch/wsg50_tcp_script.launch">
 			<arg name="gripper_ip" value="192.168.2.111"/>
 		</include>
@@ -42,15 +47,14 @@
 	</include>
 	
 	
-	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server" output="screen">
+	<node name="trajectory_action_server" pkg="pose_estimation" type="trajectory_action_server">
 		<remap from="/move_group/fake_controller_joint_states" to="/motoman/joint_ll_control" unless="$(arg simulation_arg)"/>
 	</node>
 	
 	<node name="plan_server" pkg="pose_estimation" type="plan_node" output="screen"/>
 
-	<node name="pre_grasp_server" pkg="pose_estimation" type="pre_grasp_selection_node" output="screen">
+	<node name="pre_grasp_server" pkg="pose_estimation" type="pre_grasp_selection_node" output="screen"/>
 		
-	</node>
 	<!--
 	<node name="test_node" pkg="pose_estimation" type="test_node" output="screen"/>
 	

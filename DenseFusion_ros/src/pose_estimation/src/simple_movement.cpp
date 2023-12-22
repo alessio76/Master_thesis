@@ -47,7 +47,7 @@ namespace uclv{
 
         else if(plan_service.request.planning_type == "joint"){
            ROS_INFO_STREAM("joint");
-            goal_joint= std::vector<double>{1.062881588935852, 0.48769956827163696, -2.498535633087158, -0.06272614002227783, -0.3274517357349396, -1.6770890951156616, -0.13831827044487};
+            goal_joint= std::vector<double>{-1.066222906112671, -0.46760591864585876, 6.075171404518187e-05, -0.6962753534317017, 0.0073357694782316685, -1.2472642660140991, -0.34363770484924316};
             plan_service.request.goal_joint = goal_joint;
         }
 

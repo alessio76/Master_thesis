@@ -11,7 +11,6 @@
 
 namespace uclv{
 
-
     Eigen::Isometry3f link_t_goal_pose(const tf2_ros::Buffer& tfBuffer, const Eigen::Vector3f& base_to_goal_vec3, const Eigen::Quaternionf& base_to_goal_quat, const std::string& end_effector_frame_name){
 
         tfBuffer.canTransform(end_effector_frame_name, "link_t", ros::Time::now(),ros::Duration(3));
@@ -48,7 +47,6 @@ namespace uclv{
 
         return target_pose;
 
-
   }
 
     geometry_msgs::TransformStamped eigen_to_TransformedStamped(const std::string& base_frame, const std::string& child_frame, const Eigen::Vector3f& position, const Eigen::Quaternionf& quaternion){
@@ -68,6 +66,28 @@ namespace uclv{
         goal_pose.transform.rotation.w = quaternion.w();
 
         return goal_pose;
+    }
+
+     std::vector<Eigen::Isometry3f> get_linear_path(Eigen::Isometry3f& target_pose, int n_points, const Eigen::Vector3f& initial_pos, Eigen::Quaternionf& initial_quat){
+
+        std::vector<Eigen::Isometry3f> target_poses;
+        Eigen::Vector3f target_pos(target_pose.translation());
+        Eigen::Quaternionf target_quat(target_pose.rotation());
+
+        float delta_t = 1.0/(float)n_points;
+        float t=0.0;
+
+        for(int i=0; i <= n_points; i++){
+
+            Eigen::Vector3f pos = initial_pos + t * (target_pos - initial_pos);
+            Eigen::Quaternionf quat = initial_quat.slerp(t, target_quat);
+            target_poses.push_back(Eigen::Isometry3f(Eigen::Translation3f(pos) * quat));
+            t = t + delta_t;
+
+        }
+        
+        return target_poses;
+
     }
 
     void update_coeff(Eigen::Matrix<double, 6, -1> &coeff, const double &tf, const std::vector<double> &qi, const std::vector<double> &qi_dot, const std::vector<double> &qi_dot_dot, const std::vector<double> &qf, const std::vector<double> &qf_dot, const std::vector<double> &qf_dot_dot){
