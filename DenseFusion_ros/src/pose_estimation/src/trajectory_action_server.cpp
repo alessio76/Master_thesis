@@ -22,7 +22,7 @@ namespace uclv
       ros::Publisher joint_pub;
       bool success=true;
       double rate=50;
-      float scale_factor=4.0;
+      float scale_factor=3.8;
       std::string result_string;
 
     public:

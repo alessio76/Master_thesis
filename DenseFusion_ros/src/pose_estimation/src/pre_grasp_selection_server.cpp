@@ -33,6 +33,8 @@ namespace uclv{
   bool pre_grasp_service(pose_estimation::pre_grasp_service::Request& req, pose_estimation::pre_grasp_service::Response& res){
 
     ROS_INFO_STREAM("Starting executing pre_grasp callback");
+    ROS_INFO_STREAM(req.planning_group);
+    ROS_INFO_STREAM(req.start_state.size());
     
     bool debug=false;
     uclv::PreGraspPolicies grasp_function_selector(pre_grasp_offset, req.planning_group, debug, on_x, on_y, on_z, desidered_force, 

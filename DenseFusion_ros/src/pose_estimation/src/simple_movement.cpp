@@ -47,7 +47,7 @@ namespace uclv{
 
         else if(plan_service.request.planning_type == "joint"){
            ROS_INFO_STREAM("joint");
-            goal_joint= std::vector<double>{-1.066222906112671, -0.46760591864585876, 6.075171404518187e-05, -0.6962753534317017, 0.0073357694782316685, -1.2472642660140991, -0.34363770484924316};
+            goal_joint= std::vector<double>{-1.947927713394165, -0.3527396321296692, 0.010175911709666252, -0.757983922958374, 0.020792273804545403, -1.1800620555877686, 0.03912951052188873};
             plan_service.request.goal_joint = goal_joint;
         }
 
@@ -101,7 +101,9 @@ Eigen::Isometry3f set_grasp_pose(const Eigen::Translation3f& test_trans, const E
     }
 
     void get_current_state(const sensor_msgs::JointState::ConstPtr& jointState){
-       initial_state = jointState -> position;
+       for(int i=0; i<7; i++){
+        initial_state.push_back(jointState -> position[i]);
+       }
     }
 
 

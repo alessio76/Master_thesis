@@ -10,7 +10,7 @@
 	<arg name="goal_frame_arg" default="goal_pose"/>
 	<arg name="base_frame_arg" default="base_link"/>
 	<arg name="max_planning_time_arg" default="1.0"/>
-	<arg name="planner_id_arg" default="RRTconnect"/>
+	<arg name="planner_id_arg" default="RRTstar"/>
 	<arg name="remapped_gripper_topic_arg" default="/fake_gripper_joints"/>
 	<arg name="dest_gripper_topic_arg" default="/gripper_joints"/>
 
@@ -24,10 +24,11 @@
 	<param name="max_planning_time" value="$(arg max_planning_time_arg)" />
 	<param name="planner_id" value="$(arg planner_id_arg)"/>
 	<param name="remapped_gripper_topic" value="$(arg remapped_gripper_topic_arg)"/>
-	<param name="dest_gripper_topic" value="$(arg dest_gripper_topic_arg)"/>
 
+	
 	<rosparam command="load" file="$(find pose_estimation)/config/gripper_config.yaml" />
 	<rosparam command="load" file="$(find pose_estimation)/config/robot_config.yaml" />
+	<rosparam command="load" file="$(find pose_estimation)/config/target_poses.yaml" />
 	
 	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_1" args="0.4 0 0.05 0 0 0 base_link object_frame_0" if="$(arg simulation_arg)"/>
 	<node pkg="tf2_ros" type="static_transform_publisher" name="fake_object_pose_2" args="0.4 0.1 0.05 0 0 0 base_link object_frame_1" if="$(arg simulation_arg)"/>

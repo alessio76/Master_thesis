@@ -3,7 +3,7 @@ import random
 import subprocess
 
 
-n_images_to_gen=100000
+n_images_to_gen=30000
 start_directory=0
 n_images_per_directory=200
 n_max_objects=10
@@ -28,7 +28,7 @@ for i in range(start_directory, start_directory+(n_images_to_gen//n_images_per_d
 		'--obj_scale', '1',
 		'--visibility-fraction',
 		#'--outf',f"/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/santal_juice_dataset_revisited/train/{str(i).zfill(3)}",
-		'--outf',f"/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/apple_dataset_revisited/train/{str(i).zfill(4)}",
+		'--outf',f"/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/apple_dataset_revisited/val/{str(i).zfill(4)}",
 		#'--outf',f"dataset/{str(i).zfill(3)}",
 	]
 	

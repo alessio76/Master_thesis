@@ -191,14 +191,15 @@ namespace uclv{
             Eigen::Isometry3f pre_grasp = it->second;
             Eigen::Isometry3f base_to_t = uclv::link_t_goal_pose(tfBuffer, pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()), end_effector_frame_name);
             geometry_msgs::Pose plan_pose = uclv::eigen_to_Pose(base_to_t.translation(), Eigen::Quaternionf(base_to_t.rotation()));
-            std::vector<geometry_msgs::Pose> target_poses;
+            /*std::vector<geometry_msgs::Pose> target_poses;
             target_poses.push_back(plan_pose);
-            success = cartesian_path_planner(trajectory, target_poses, move_group_interface);
+            success = cartesian_path_planner(trajectory, target_poses, move_group_interface);*/
 
-            /*move_group_interface.setPoseTarget(plan_pose);
-            move_group_interface.setPlannerId("LazyPRMstar");
+            move_group_interface.setPoseTarget(plan_pose);
+            move_group_interface.setPlanningTime(1);
+            move_group_interface.setPlannerId("RRTstar");
             success = (move_group_interface.plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-            trajectory=my_plan.trajectory_;*/
+            trajectory=my_plan.trajectory_;
             
             if(success){
                 pre_grasp_pose = uclv::eigen_to_TransformedStamped(base_frame_name, goal_frame_name, pre_grasp.translation(), Eigen::Quaternionf(pre_grasp.rotation()));

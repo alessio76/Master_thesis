@@ -3,6 +3,8 @@ float64[] goal_joint
 string planning_group
 string planning_type
 float64[] start_state
+bool attach
+bool detach
 string attach_obj_id
 ---
 moveit_msgs/RobotTrajectory trajectory

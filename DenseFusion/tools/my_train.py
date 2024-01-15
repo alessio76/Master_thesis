@@ -25,6 +25,7 @@ from torch.autograd import Variable
 from datasets.ycb.dataset import PoseDataset as PoseDataset_ycb
 from datasets.linemod.dataset import PoseDataset as PoseDataset_linemod
 from datasets.santal_dataset.dataset import PoseDataset as PoseDataset_santal_dataset
+from datasets.apple_dataset.dataset import PoseDataset as PoseDataset_apple_dataset
 from lib.network import PoseNet, PoseRefineNet
 from lib.loss import Loss
 from lib.loss_refiner import Loss_refine
@@ -33,7 +34,7 @@ import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default = 'santal_dataset', help='ycb or linemod or santal_dataset')
-parser.add_argument('--dataset_root', type=str, default = '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
+parser.add_argument('--dataset_root', type=str, default = '/mnt/d1382ef8-acda-4cd4-ae67-0a971abc01c8/dope_dataset/apple_dataset_revisited', help='dataset root dir (''YCB_Video_Dataset'' or ''Linemod_preprocessed'' or ''santal_dataset'')')
 parser.add_argument('--batch_size', type=int, default = 32, help='batch size')
 parser.add_argument('--workers', type=int, default = 10, help='number of data loading workers')
 parser.add_argument('--lr', type=float ,default=0.0001, help='learning rate')
@@ -54,8 +55,6 @@ parser.add_argument('--max_imgs_test', type=int, default=None,help='If not None 
 parser.add_argument('--max_failure', type=int, default=10,help='max iteration where the val precision does not increase')
 
 opt = parser.parse_args()
-
-
 
 def freeze_layers(model,layers_to_freeze):
     for name in layers_to_freeze:
@@ -89,6 +88,15 @@ def main():
         opt.log_dir = 'experiments/logs/santal_dataset' #folder to save logs
         opt.log_file_train="santal_train.log"
         opt.log_file_test="santal_test.log"
+        opt.repeat_epoch = 1 #number of repeat times for one epoch training
+
+    elif opt.dataset == 'apple_dataset':
+        opt.num_objects = 1 #number of object classes in the dataset
+        opt.num_points = 1000 #number of points on the input pointcloud
+        opt.outf = 'trained_models/apple_dataset' #folder to save trained models
+        opt.log_dir = 'experiments/logs/apple_dataset' #folder to save logs
+        opt.log_file_train="apple_train.log"
+        opt.log_file_test="apple_test.log"
         opt.repeat_epoch = 1 #number of repeat times for one epoch training
     else:
         print('Unknown dataset')
@@ -144,6 +152,8 @@ def main():
         dataset = PoseDataset_linemod('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
     elif opt.dataset == 'santal_dataset':
         dataset = PoseDataset_santal_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
+    elif opt.dataset == 'apple_dataset':
+        dataset = PoseDataset_apple_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=opt.workers)
 
     if opt.dataset == 'ycb':
@@ -152,12 +162,13 @@ def main():
         test_dataset = PoseDataset_linemod('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
     elif opt.dataset == 'santal_dataset':
         test_dataset = PoseDataset_santal_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
+    elif opt.dataset == 'apple_dataset':
+        test_dataset = PoseDataset_apple_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
     testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=opt.workers)
     
     opt.sym_list = dataset.get_sym_list()
     opt.num_points_mesh = dataset.get_num_points_mesh()
-    
-
+   
     print('>>>>>>>>----------Dataset loaded!---------<<<<<<<<\nlength of the training set: {0}\nlength of the testing set: {1}\nnumber of sample points on mesh: {2}\nsymmetry object list: {3}'.format(len(dataset), len(test_dataset), opt.num_points_mesh, opt.sym_list))
     
     criterion = Loss(opt.num_points_mesh, opt.sym_list)
@@ -167,7 +178,7 @@ def main():
     if opt.start_epoch == 1 and  os.path.exists(os.path.join(opt.log_dir, opt.log_file_train)):
         os.remove(os.path.join(opt.log_dir, opt.log_file_train))
 
-    tensor_dir = os.path.join(opt.log_dir,'santal_session')
+    tensor_dir = os.path.join(opt.log_dir,'apple_session')
 
     import shutil
     if os.path.exists(tensor_dir):
@@ -180,13 +191,12 @@ def main():
     iteration_per_epoch = len(dataset) // opt.batch_size
     extimated_iterations=opt.nepoch*iteration_per_epoch
 
-   
-    """main_layers_to_freeze=[]
+    """
+    main_layers_to_freeze=[]
     for i in range(1,2):
         main_layers_to_freeze.append('conv%d_r' % i)
         main_layers_to_freeze.append('conv%d_t' % i)
         main_layers_to_freeze.append('conv%d_c' % i)
-    main_layers_to_freeze.extend(('feat','cnn'))
     
     for i in range(3,5):
         layer=getattr(estimator,'conv%d_r' % i)
@@ -198,7 +208,7 @@ def main():
    
     freeze_layers(estimator,main_layers_to_freeze)
     refine_layers_to_freeze=[]
-    refine_layers_to_freeze.extend(('feat','conv1_r','conv1_t'))
+    refine_layers_to_freeze.extend(('conv1_r'))
     freeze_layers(refiner,refine_layers_to_freeze)
     
     for i in range(2,4):
@@ -207,10 +217,14 @@ def main():
         layer=getattr(refiner,'conv%d_t' % i)
         nn.init.xavier_uniform_(layer.weight)
     
-    for name, param in estimator.named_parameters():
-        if '4_r' not in name and '4_t' not in name and "4_c" not in name and '3_r' not in name and '3_t' not in name and "3_c" not in name: # and '2_r' not in name and '2_t' not in name and "2_c" not in name and '1_r' not in name and '1_t' not in name and "1_c" not in name:
-            param.requires_grad = False"""
-
+    if opt.dataset == 'apple_dataset':
+        for name, param in estimator.named_parameters():
+            if '_r' in name:
+                param.requires_grad = False
+        for name, param in refiner.named_parameters():
+            if '_r' in name:
+                param.requires_grad = False
+    """
     num_params_estimator = sum(p.numel() for p in estimator.parameters() if p.requires_grad)
     num_params_refiner= sum(p.numel() for p in refiner.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: estimaator: {num_params_estimator/1e6}M, refiner: {num_params_refiner/1e6}M")
@@ -218,7 +232,7 @@ def main():
   
     print("epoch",opt.nepoch,'learning rate',opt.lr,'batch size',opt.batch_size,'estimated iterations',extimated_iterations,
           os.path.join(opt.log_dir,opt.log_file_train),os.path.join(opt.log_dir,opt.log_file_test))
-    #input("Start training?")
+    input("Start training?")
     st_time = time.time()
     train_iteration=0
     validation_errors=0
@@ -474,13 +488,18 @@ def main():
                     dataset = PoseDataset_linemod('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
                 elif opt.dataset == 'santal_dataset':
                     dataset = PoseDataset_santal_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
+                elif opt.dataset == 'apple_dataset':
+                    dataset = PoseDataset_apple_dataset('train', opt.num_points, True, opt.dataset_root, opt.noise_trans, opt.refine_start)
                 dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=opt.workers)
+
                 if opt.dataset == 'ycb':
                     test_dataset = PoseDataset_ycb('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
                 elif opt.dataset == 'linemod':
                     test_dataset = PoseDataset_linemod('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
                 elif opt.dataset == 'santal_dataset':
                     dataset = PoseDataset_santal_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
+                elif opt.dataset == 'apple_dataset':
+                    dataset = PoseDataset_apple_dataset('test', opt.num_points, False, opt.dataset_root, 0.0, opt.refine_start)
                 testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=opt.workers)
                 
                 opt.sym_list = dataset.get_sym_list()

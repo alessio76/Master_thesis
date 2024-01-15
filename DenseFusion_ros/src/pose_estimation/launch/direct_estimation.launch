@@ -40,7 +40,7 @@
 
         <!-- Segmentation paremeters -->
         <param name="top_k" value="5" />
-        <param name="score_threshold" value="0.95" />
+        <param name="score_threshold" value="0.99" />
         <param name="display_masks" value="True" />
         <param name="display_bboxes" value="True" />
         <param name="display_text" value="True" />

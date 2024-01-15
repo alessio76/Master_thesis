@@ -71,10 +71,10 @@ class PoseDataset(data.Dataset):
         if mode == 'train':
             #path contains root path for images and point cloud 
             #read train images path from train.json used for yolact 
-            self.path = os.path.join(self.root,'dataset_apple_7')
+            self.path = os.path.join(self.root,'train')
         elif mode == 'test':
              #read train images path from test.json used for yolact 
-            self.path = os.path.join(self.root,'dataset_apple_7')
+            self.path = os.path.join(self.root,'val')
 
         self.mode=mode
         self.image_list=get_imgs_paths(self.path)
@@ -99,7 +99,7 @@ class PoseDataset(data.Dataset):
                 break
             #complete point cloud of each object
             #input_file = open('{0}/YCB_Video_Models/models/{1}/points.xyz'.format(self.root, class_input))
-            input_file=open(os.path.join(self.root,"apple_dataset_revisited","apple.xyz"))
+            input_file=open(os.path.join(self.root,"red_apple","apple.xyz"))
             self.class_dict[class_input]=class_id
             self.cld[class_id] = []
             #store point cloud in order
@@ -218,8 +218,8 @@ class PoseDataset(data.Dataset):
                     target_t = np.array(meta['objects'][i]['location'])
                     add_t = np.array([random.uniform(-self.noise_trans, self.noise_trans) for i in range(3)])
                     choose = mask[rmin:rmax, cmin:cmax].flatten().nonzero()[0]
-                    """
-                    plt.subplot(1, 3, 2)
+                    
+                    """plt.subplot(1, 3, 2)
                     plt.imshow(mask_label[rmin:rmax, cmin:cmax],cmap='gray')
                     plt.axis('off')  # Turn off axis labels and ticks (optional)
                     plt.title('Seg')
@@ -238,8 +238,8 @@ class PoseDataset(data.Dataset):
                     plt.title('RGB')
                     plt.tight_layout()
                     
-                    plt.show()
-                    """
+                    plt.show()"""
+                    
                     if len(choose) > self.num_pt:
                         c_mask = np.zeros(len(choose), dtype=int)
                         c_mask[:self.num_pt] = 1
@@ -284,7 +284,7 @@ class PoseDataset(data.Dataset):
                     else:
                         target = np.add(target, target_t)
                     
-                    fig2= plt.figure()
+                    """fig2= plt.figure()
                     ax1 = fig2.add_subplot(projection='3d')
                     ax1.scatter(target[:,0],target[:,1], target[:,2],c='g')
                     ax1.scatter(cloud[:,0], cloud[:,1], cloud[:,2],c='r')
@@ -294,7 +294,7 @@ class PoseDataset(data.Dataset):
                     ax1.set_zlabel('Z')
                     print(np.mean(target[:,0]),np.mean(target[:,1]), np.mean(target[:,2]))
                     print(np.mean(cloud[:,0]) ,np.mean(cloud[:,1]), np.mean(cloud[:,2]))
-                    plt.show()
+                    plt.show()"""
                     
                     cloud_list.append(torch.from_numpy(cloud.astype(np.float32)))
                     choose_list.append(torch.LongTensor(choose.astype(np.int32)))

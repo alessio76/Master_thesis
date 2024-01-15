@@ -5,7 +5,7 @@ gripper_widths:
   on_z: 10
   
 #force in N
-desidered_force: 8.0
+desidered_force: 9.0
 
 #speed in mm/s
 gripper_requested_speed: 50.0

@@ -49,7 +49,7 @@ namespace uclv{
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
 
-    if(req.attach_obj_id.size() > 0){
+    if(req.attach){
       move_group_interface.attachObject(req.attach_obj_id, end_effector_frame_name, { "tactile_1", "tactile_2" });
     }
 
@@ -88,7 +88,8 @@ namespace uclv{
     
     res.success=success;
     res.trajectory=trajectory;
-    if(req.attach_obj_id.size() > 0)
+
+    if(req.detach)
       move_group_interface.detachObject(req.attach_obj_id);
     return true;
   }
