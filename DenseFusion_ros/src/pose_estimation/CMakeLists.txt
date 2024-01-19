@@ -161,6 +161,7 @@ include_directories(
  add_executable(test_node src/simple_movement.cpp)
  add_executable(trajectory_action_server src/trajectory_action_server.cpp)
  add_executable(pre_grasp_selection_node src/pre_grasp_selection_server.cpp)
+ add_executable(pose_conversion_node src/pose_conversion.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,7 +171,8 @@ include_directories(
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(plan_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(pre_grasp_policies ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(plan_node ${catkin_LIBRARIES})
@@ -178,6 +180,7 @@ include_directories(
  target_link_libraries(main_node ${catkin_LIBRARIES})
  target_link_libraries(test_node ${catkin_LIBRARIES})
  target_link_libraries(trajectory_action_server ${catkin_LIBRARIES})
+ target_link_libraries(pose_conversion_node ${catkin_LIBRARIES})
  target_link_libraries(pre_grasp_selection_node ${catkin_LIBRARIES} pre_grasp_policies)
 
 #############

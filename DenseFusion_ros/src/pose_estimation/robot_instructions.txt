@@ -3,3 +3,9 @@ servo on ready
 
 per ros 
 select_job -> init_ros -> giro chiave -> servo_on -> luce verde
+
+piccola 40mm
+amelie_no_bollino 48mm 
+grande 60mm 
+
+

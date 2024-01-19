@@ -105,7 +105,6 @@ class ImageProcessor:
         #self.ts = message_filters.TimeSynchronizer([image_sub, depth_sub], 10)
         #self.pose_pub = rospy.Publisher(self.pose_, mask)
         self.camera_frame=rospy.get_param('tf_camera_frame')
-        self.ts.registerCallback(self.callback)
         self.depth_img=np.zeros((self.height,self.width))
         self.class_id_dict=class_id_dict
         self.segmentation_topic=segmentation_topic
@@ -115,6 +114,7 @@ class ImageProcessor:
         self.yolact=yolact
         self.masks_msg=self.create_mask_msg(self.height,self.width)
         self.default_mask_msg=self.create_mask_msg(self.height,self.width)
+        self.ts.registerCallback(self.callback)
 
         self.color=[[255, 255, 255], [0, 255, 0], [255, 0, 0], [0, 0, 255], [255, 255, 0],
                 [255, 0, 255], [0, 255, 255], [128, 0, 0], [0, 128, 0], [0, 0, 128],
@@ -286,7 +286,7 @@ class ImageProcessor:
                                     my_t = my_t_final
                         
                         
-                        rospy.loginfo(f'my_t={my_t},my_r={my_r}')
+                        #rospy.loginfo(f'my_t={my_t},my_r={my_r}')
                         tf_message=self.create_tf_message(my_t,my_r,i,self.camera_frame)
                         self.tf_broadcaster.sendTransform(tf_message)
                
@@ -380,7 +380,7 @@ if __name__ == '__main__':
                 input_line = input_line[:-1].split(' ')
                 cld[class_id].append([float(input_line[0]), float(input_line[1]), float(input_line[2])])
             input_file.close()
-            cld[class_id] = np.array(cld[class_id])/1000
+            cld[class_id] = np.array(cld[class_id])
             class_id += 1
     
     image_topic=rospy.get_param("image_topic_name")
@@ -393,6 +393,7 @@ if __name__ == '__main__':
     yolact.detect.use_fast_nms = True
     yolact.detect.use_cross_class_nms = True
     yolact.cuda()
+    
     segmentation_topic=rospy.get_param('segmentation_topic_name')
     torch.set_default_tensor_type('torch.cuda.FloatTensor')  
     image_processor = ImageProcessor(image_topic,depth_topic,mask_topic,pose_model,class_id_dict,num_points,min_pixel,yolact,segmentation_topic,cam_scale,pose_refinement_model)
