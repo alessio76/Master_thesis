@@ -40,8 +40,14 @@ fx=610.59326171875
 fy=610.605712890625
 cx= 320.0
 cy=240.0
+
+#path to the directory containing the json files
 json_file_dir = "/home/alessio/progetto_robotica/yolact_net/data/my_dataset/train/annotations"
+
+#name of the object class (must be the same as in nvisii json annotation files)
 obj_class = '002_master_chef_can'
+
+#path to the point cloud path
 point_cloud_path="/home/alessio/progetto_robotica/DenseFusion/datasets/my_dataset/YCB_Video_Models/models/002_master_chef_can/points.xyz"
 cld=[]
 
